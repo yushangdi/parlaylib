@@ -95,7 +95,7 @@ const flags fl_scan_inclusive = (1 << 4);
 
 template <typename In_Seq, typename Out_Seq, class Monoid>
 auto scan_serial(In_Seq const &In, Out_Seq Out, Monoid const &m,
-                 typename In_Seq::value_type offset, flags fl = no_flag) ->
+                 typename In_Seq::value_type offset, flags fl, bool out_uninitialized = false) ->
     typename In_Seq::value_type {
   using T = typename In_Seq::value_type;
   T r = offset;
@@ -104,38 +104,43 @@ auto scan_serial(In_Seq const &In, Out_Seq Out, Monoid const &m,
   if (inclusive) {
     for (size_t i = 0; i < n; i++) {
       r = m.f(r, In[i]);
-      Out[i] = r;
+      if (out_uninitialized)
+	assign_uninitialized(Out[i], r);
+      else Out[i] = r;
     }
   } else {
     for (size_t i = 0; i < n; i++) {
       T t = In[i];
-      Out[i] = r;
+      if (out_uninitialized)
+	assign_uninitialized(Out[i], r);
+      else Out[i] = r;
       r = m.f(r, t);
     }
   }
   return r;
 }
 
+  
 template <typename In_Seq, typename Out_Range, class Monoid>
-auto scan_(In_Seq const &In, Out_Range Out, Monoid const &m, flags fl = no_flag)
+auto scan_(In_Seq const &In, Out_Range Out, Monoid const &m, flags fl,
+	   bool out_uninitialized=false)
     -> typename In_Seq::value_type {
   using T = typename In_Seq::value_type;
   size_t n = In.size();
   size_t l = num_blocks(n, _block_size);
   if (l <= 2 || fl & fl_sequential)
-    return scan_serial(In, Out, m, m.identity, fl);
+    return scan_serial(In, Out, m, m.identity, fl, out_uninitialized);
   sequence<T> Sums(l);
   sliced_for(n, _block_size, [&](size_t i, size_t s, size_t e) {
     Sums[i] = reduce_serial(make_slice(In).cut(s, e), m);
   });
-  T total = scan_serial(Sums, make_slice(Sums), m, m.identity, 0);
+  T total = scan_serial(Sums, make_slice(Sums), m, m.identity, 0, false);
   sliced_for(n, _block_size, [&](size_t i, size_t s, size_t e) {
     auto O = make_slice(Out).cut(s, e);
-    scan_serial(make_slice(In).cut(s, e), O, m, Sums[i], fl);
+    scan_serial(make_slice(In).cut(s, e), O, m, Sums[i], fl, out_uninitialized);
   });
   return total;
 }
-
 
 template <typename Iterator, typename Monoid>
 auto scan_inplace(slice<Iterator, Iterator> In, Monoid m, flags fl = no_flag) {
@@ -147,8 +152,8 @@ auto scan(In_Seq const &In, Monoid m, flags fl = no_flag)
     -> std::pair<sequence<typename In_Seq::value_type>,
                  typename In_Seq::value_type> {
   using T = typename In_Seq::value_type;
-  sequence<T> Out(In.size());
-  return std::make_pair(std::move(Out), scan_(In, make_slice(Out), m, fl));
+  auto Out = sequence<T>::uninitialized(In.size());
+  return std::make_pair(std::move(Out), scan_(In, make_slice(Out), m, fl, true));
 }
 
 // do in place if rvalue reference to a sequence<T>

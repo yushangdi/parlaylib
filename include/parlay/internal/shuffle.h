@@ -69,7 +69,7 @@ namespace parlay {
     sequence<size_t> bucket_offsets;
     bool single;
     std::tie(bucket_offsets, single)
-      = count_sort(In, Out, get_pos, num_buckets);
+      = count_sort(make_slice(In), Out, make_slice(get_pos), num_buckets);
 
     // now sequentially randomly shuffle within each bucket
     auto bucket_f = [&] (size_t i) {

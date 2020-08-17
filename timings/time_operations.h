@@ -191,89 +191,89 @@ double t_write_min(size_t n, bool) {
   return t;
 }
 
-// template<typename T>
-// double t_shuffle(size_t n, bool) {
-//   parlay::sequence<T> in(n, [&] (size_t i) {return i;});
-//   time(t, parlay::random_shuffle(in, n););
-//   return t;
-// }
+template<typename T>
+double t_shuffle(size_t n, bool) {
+  auto in = parlay::tabulate(n, [&] (size_t i) -> T {return i;});
+  time(t, parlay::random_shuffle(in, n););
+  return t;
+}
 
-// template<typename T>
-// bool check_histogram(parlay::sequence<T> const &in, parlay::sequence<T> const &out) {
-//   size_t m = out.size();
-//   auto a = sort(in, std::less<T>());
-//   auto b = get_counts(a, [&] (T a) {return a;}, m);
-//   size_t err_loc = parlay::find_if_index(m, [&] (size_t i) {return out[i] != b[i];});
-//   if (err_loc != m) {
-//     cout << "ERROR in histogram at location "
-// 	 << err_loc << ", got " << out[err_loc] << ", expected " << b[err_loc] << endl;
-//     return false;
-//   }
-//   return true;
-// }
+template<typename T>
+bool check_histogram(parlay::sequence<T> const &in, parlay::sequence<T> const &out) {
+  // size_t m = out.size();
+  // auto a = sort(in, std::less<T>());
+  // auto b = get_counts(a, [&] (T a) {return a;}, m);
+  // size_t err_loc = parlay::find_if_index(m, [&] (size_t i) {return out[i] != b[i];});
+  // if (err_loc != m) {
+  //   cout << "ERROR in histogram at location "
+  // 	 << err_loc << ", got " << out[err_loc] << ", expected " << b[err_loc] << endl;
+  //   return false;
+  // }
+  return true;
+}
 
-// template<typename T>
-// double t_histogram(size_t n, bool check) {
-//   parlay::random r(0);
-//   parlay::sequence<T> in(n, [&] (size_t i) {return r.ith_rand(i)%n;});
-//   parlay::sequence<T> out;
-//   //auto get_key = [&] (T a) {return a;};
-//   //auto get_val = [&] (T a) {return (T) 1;};
-//   //time(t, out = parlay::collect_reduce(in, get_key, get_val, parlay::addm<T>(), n););
-//   time(t, out = parlay::histogram(in, (T) n););
-//   if (check) check_histogram(in, out);
-//   return t;
-// }
+template<typename T>
+double t_histogram(size_t n, bool check) {
+  parlay::random r(0);
+  auto in = parlay::tabulate(n, [&] (size_t i) -> T {return r.ith_rand(i)%n;});
+  parlay::sequence<T> out;
+  //auto get_key = [&] (T a) {return a;};
+  //auto get_val = [&] (T a) {return (T) 1;};
+  //time(t, out = parlay::collect_reduce(in, get_key, get_val, parlay::addm<T>(), n););
+  time(t, out = parlay::histogram(in, (T) n););
+  if (check) check_histogram(in, out);
+  return t;
+}
 
-// template<typename T>
-// double t_histogram_few(size_t n, bool check) {
-//   parlay::random r(0);
-//   parlay::sequence<T> in(n, [&] (size_t i) {return r.ith_rand(i)%256;});
-//   parlay::sequence<T> out;
-//   //auto get_key = [&] (T a) {return a;};
-//   //auto get_val = [&] (T a) {return (T) 1;};
-//   //time(t, out = parlay::collect_reduce(in, get_key, get_val, parlay::addm<T>(), 256););
-//   time(t, out = parlay::histogram(in, (T) 256););
-//   if (check) check_histogram(in, out);
-//   return t;
-// }
+template<typename T>
+double t_histogram_few(size_t n, bool check) {
+  parlay::random r(0);
+  auto in = parlay::tabulate(n, [&] (size_t i) -> T {return r.ith_rand(i)%256;});
+  parlay::sequence<T> out;
+  //auto get_key = [&] (T a) {return a;};
+  //auto get_val = [&] (T a) {return (T) 1;};
+  //time(t, out = parlay::collect_reduce(in, get_key, get_val, parlay::addm<T>(), 256););
+  time(t, out = parlay::histogram(in, (T) 256););
+  if (check) check_histogram(in, out);
+  return t;
+}
 
-// template<typename T>
-// double t_histogram_same(size_t n, bool check) {
-//   parlay::sequence<T> in(n, (T) 10311);
-//   parlay::sequence<T> out;
-//   //auto get_key = [&] (T a) {return a;};
-//   //auto get_val = [&] (T a) {return (T) 1;};
-//   //time(t, out = parlay::collect_reduce(in, get_key, get_val, parlay::addm<T>(), n););
-//   time(t, out = parlay::histogram(in, (T) n););
-//   if (check) check_histogram(in, out);
-//   return t;
-// }
+template<typename T>
+double t_histogram_same(size_t n, bool check) {
+  parlay::sequence<T> in(n, (T) 10311);
+  parlay::sequence<T> out;
+  //auto get_key = [&] (T a) {return a;};
+  //auto get_val = [&] (T a) {return (T) 1;};
+  //time(t, out = parlay::collect_reduce(in, get_key, get_val, parlay::addm<T>(), n););
+  time(t, out = parlay::histogram(in, (T) n););
+  if (check) check_histogram(in, out);
+  return t;
+}
 
-// // this checks against a given sort
-// template<typename T, typename Cmp>
-// bool check_sort(parlay::sequence<T> const &in, parlay::sequence<T> const &out,
-// 		Cmp less, std::string sort_name) {
-//   size_t n = in.size();
-//   auto a = parlay::merge_sort(in, std::less<T>());
-//   size_t err_loc = parlay::find_if_index(n, [&] (size_t i) {
-//       return less(a[i],out[i]) || less(out[i],a[i]);});
-//   if (err_loc != n) {
-//     cout << "ERROR in " << sort_name << " at location " << err_loc << endl;
-//     return false;
-//   }
-//   return true;
-// }
+// this checks against a given sort
+template<typename T, typename Cmp>
+bool check_sort(parlay::sequence<T> const &in, parlay::sequence<T> const &out,
+		Cmp less, std::string sort_name) {
+  // size_t n = in.size();
+  // auto a = parlay::merge_sort(in, std::less<T>());
+  // size_t err_loc = parlay::find_if_index(n, [&] (size_t i) {
+  //     return less(a[i],out[i]) || less(out[i],a[i]);});
+  // if (err_loc != n) {
+  //   cout << "ERROR in " << sort_name << " at location " << err_loc << endl;
+  //   return false;
+  // }
+  return true;
+}
 
-// template<typename T>
-// double t_sort(size_t n, bool check) {
-//   parlay::random r(0);
-//   parlay::sequence<T> in(n, [&] (size_t i) {return r.ith_rand(i)%n;});
-//   parlay::sequence<T> out;
-//   time(t, out = parlay::sample_sort(in, std::less<T>()););
-//   if (check) check_sort(in, out, std::less<T>(), "sample sort");
-//   return t;
-// }
+template<typename T>
+double t_sort(size_t n, bool check) {
+  parlay::random r(0);
+  auto in = parlay::tabulate(n, [&] (size_t i) -> T {return r.ith_rand(i)%n;});
+  parlay::sequence<T> out;
+  time(t, out = parlay::internal::sample_sort(parlay::make_slice(in), std::less<T>()););
+  if (check) check_sort(in, out, std::less<T>(), "sample sort");
+  return t;
+}
 
 // // no check since it is used for the sort for checking, and hence
 // // checked against the other sorts
@@ -306,7 +306,7 @@ double t_count_sort_bits(size_t n, size_t bits) {
   parlay::sequence<T> out(n);
   auto f = [&] (size_t i) {return in[i] & mask;};
   auto keys = parlay::delayed_sequence<unsigned char>(n, f);
-  time(t, parlay::internal::count_sort(in.slice(0,n), out.slice(0,n),
+  time(t, parlay::internal::count_sort(parlay::make_slice(in), parlay::make_slice(out),
 				       parlay::make_slice(keys.begin(),keys.end()), num_buckets););
   for (size_t i=1; i < n; i++) {
     if ((out[i-1] & mask) > (out[i] & mask)) {
@@ -392,47 +392,47 @@ double t_count_sort_8(size_t n, bool) {return t_count_sort_bits<T>(n, 8);}
 // // }
 
 
-// template<typename T>
-// double t_integer_sort_pair(size_t n, bool check) {
-//   using par = std::pair<T,T>;
-//   parlay::random r(0);
-//   size_t bits = sizeof(T)*8;
-//   parlay::sequence<par> S(n, [&] (size_t i) -> par {
-//       return par(r.ith_rand(i),i);});
-//   parlay::sequence<par> R;
-//   auto first = [] (par a) {return a.first;};
-//   time(t, R = parlay::integer_sort(S.slice(),first,bits););
+template<typename T>
+double t_integer_sort_pair(size_t n, bool check) {
+  using par = std::pair<T,T>;
+  parlay::random r(0);
+  size_t bits = sizeof(T)*8;
+  auto S = parlay::tabulate(n, [&] (size_t i) -> par {
+				 return par(r.ith_rand(i),i);});
+  parlay::sequence<par> R;
+  auto first = [] (par a) {return a.first;};
+  time(t, R = parlay::internal::integer_sort(parlay::make_slice(S), first, bits););
 
-//   auto less = [] (par a, par b) {return a.first < b.first;};
-//   if (check) check_sort(S, R, less, "integer sort pair");
-//   return t;
-// }
+  auto less = [] (par a, par b) {return a.first < b.first;};
+  if (check) check_sort(S, R, less, "integer sort pair");
+  return t;
+}
 
-// template<typename T>
-// double t_integer_sort(size_t n, bool check) {
-//   parlay::random r(0);
-//   size_t bits = sizeof(T)*8;
-//   parlay::sequence<T> S(n, [&] (size_t i) -> T {
-//       return r.ith_rand(i);});
-//   auto identity = [] (T a) {return a;};
-//   parlay::sequence<T> R;
-//   //time(t, parlay::integer_sort_inplace(S.slice(),identity,bits););
-//   time(t, R = parlay::integer_sort(S, identity, bits););
-//   if (check) check_sort(S, R, std::less<T>(), "integer sort");
-//   return t;
-// }
+template<typename T>
+double t_integer_sort(size_t n, bool check) {
+  parlay::random r(0);
+  size_t bits = sizeof(T)*8;
+  auto S = parlay::tabulate(n, [&] (size_t i) -> T {
+				 return r.ith_rand(i);});
+  auto identity = [] (T a) {return a;};
+  parlay::sequence<T> R;
+  //time(t, parlay::integer_sort_inplace(S.slice(),identity,bits););
+  time(t, R = parlay::internal::integer_sort(parlay::make_slice(S), identity, bits););
+  if (check) check_sort(S, R, std::less<T>(), "integer sort");
+  return t;
+}
 
-// typedef unsigned __int128 long_int;
-// double t_integer_sort_128(size_t n, bool) {
-//   parlay::random r(0);
-//   size_t bits = parlay::log2_up(n);
-//   parlay::sequence<long_int> S(n, [&] (size_t i) -> long_int {
-//       return r.ith_rand(2*i) + (((long_int) r.ith_rand(2*i+1)) << 64) ;});
-//   auto identity = [] (long_int a) {return a;};
-//   parlay::sequence<long_int> out;
-//   time(t, out = parlay::integer_sort(S.slice(),identity,bits););
-//   return t;
-// }
+typedef unsigned __int128 long_int;
+double t_integer_sort_128(size_t n, bool) {
+  parlay::random r(0);
+  size_t bits = parlay::log2_up(n);
+  auto S = parlay::tabulate(n, [&] (size_t i) -> long_int {
+      return r.ith_rand(2*i) + (((long_int) r.ith_rand(2*i+1)) << 64) ;});
+  auto identity = [] (long_int a) {return a;};
+  parlay::sequence<long_int> out;
+  time(t, out = parlay::internal::integer_sort(parlay::make_slice(S),identity,bits););
+  return t;
+}
 
 // template<typename T>
 // double t_merge(size_t n, bool) {
