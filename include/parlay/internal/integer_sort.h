@@ -109,6 +109,7 @@ sequence<size_t> integer_sort_r(slice<InIterator, InIterator> In,
                                 size_t num_buckets, bool inplace,
                                 float parallelism = 1.0) {
   using T = typename slice<InIterator, InIterator>::value_type;
+  timer t("integer sort");
   
   size_t n = In.size();
   size_t cache_per_thread = 1000000;
@@ -159,7 +160,8 @@ sequence<size_t> integer_sort_r(slice<InIterator, InIterator> In,
     std::tie(offsets, one_bucket) =
         count_sort(In, Out, make_slice(get_bits), num_outer_buckets, parallelism,
                    !return_offsets);
-
+    if (key_bits == 32) t.next("count sort");
+  
     // if all but one bucket are empty, try again on lower bits
     if (one_bucket) {
       return integer_sort_r<inplace_tag>(In, Out, Tmp, g, shift_bits, 0, inplace,
