@@ -40,16 +40,16 @@ auto map(R&& r, UnaryOp&& f) {
 // ownership of it by moving it. If r is a reference,
 // the delayed sequence will hold a reference to it, so
 // r must remain alive as long as the delayed sequence.
-template<PARLAY_RANGE_TYPE R, typename UnaryOp>
-auto dmap(R&& r, UnaryOp&& f) {
-  size_t n = parlay::size(r);
-  return delayed_sequence<typename std::remove_reference<
-                          typename std::remove_cv<
-                          decltype(f(std::declval<range_value_type_t<R>&>()))
-                          >::type>::type>
-    (n, [ r = std::forward<R>(r), f = std::forward<UnaryOp>(f) ]
-      (size_t i) { return f(std::begin(r)[i]); });
-}
+// template<PARLAY_RANGE_TYPE R, typename UnaryOp>
+// auto dmap(R&& r, UnaryOp&& f) {
+//   size_t n = parlay::size(r);
+//   return delayed_sequence<typename std::remove_reference<
+//                           typename std::remove_cv<
+//                           decltype(f(std::declval<range_value_type_t<R>&>()))
+//                           >::type>::type>
+//     (n, [ r = std::forward<R>(r), f = std::forward<UnaryOp>(f) ]
+//       (size_t i) { return f(std::begin(r)[i]); });
+// }
 
 /* -------------------- Copying -------------------- */
 
@@ -205,7 +205,8 @@ auto histogram(const R& A, Integer_ m) {
   // histogram internally calls integer sort, which has a
   // const correctness bug and tries to modify the input.
   // TODO: Fix this.
-  auto s = parlay::to_sequence(A);
+  //auto s = parlay::to_sequence(A);
+  R& s = const_cast<R&>(A);
   return internal::histogram(make_slice(s), m);
 }
 
@@ -303,14 +304,16 @@ void stable_sort_inplace(R&& in) {
 
 template<PARLAY_RANGE_TYPE R>
 auto integer_sort(const R& in) {
-  auto s = parlay::to_sequence(in);
+  //auto s = parlay::to_sequence(in);
+  R& s = const_cast<R&>(in);
   internal::integer_sort_inplace(make_slice(s), [](auto x) { return x; });
   return s;
 }
 
 template<PARLAY_RANGE_TYPE R, typename Key>
 auto integer_sort(const R& in, Key&& key) {
-  auto s = parlay::to_sequence(in);
+  //auto s = parlay::to_sequence(in);
+  R& s = const_cast<R&>(in);
   internal::integer_sort_inplace(make_slice(s), std::forward<Key>(key));
   return s;
 }

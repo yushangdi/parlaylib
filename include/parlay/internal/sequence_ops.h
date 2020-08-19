@@ -22,16 +22,30 @@ auto map(Seq const &A, UnaryFunc f) -> sequence<decltype(f(A[0]))> {
   return tabulate(A.size(), [&](size_t i) { return f(A[i]); });
 }
 
+template <class F>
+auto dseq (size_t n, F f) -> delayed_sequence<decltype(f(0)),F>
+{
+  using T = decltype(f(0));
+  return delayed_sequence<T,F>(n,f);
+}
+
 // delayed version of map
 // requires C++14 or greater, both since return type is not defined (a lambda)
 //   and for support of initialization of the closure lambda capture
 template <typename Seq, typename UnaryFunc>
-auto dmap(Seq&& A, UnaryFunc&& f) {
+auto dmap(Seq &&A, UnaryFunc&& f) {
   size_t n = A.size();
-  return delayed_sequence<decltype(A[0])>(n,
-    [ f = std::forward<UnaryFunc>(f), A = std::forward<Seq>(A) ]
-      (size_t i) { return f(A[i]); });
-}
+  return dseq(n, [f=std::forward<UnaryFunc>(f),
+		  A=std::forward<Seq>(A)] (size_t i) {
+		return f(A[i]);});}
+
+// template <typename Seq, typename UnaryFunc>
+// auto dmap(Seq&& A, UnaryFunc&& f) {
+//   size_t n = A.size();
+//   return delayed_sequence<decltype(A[0])>(n,
+//     [ f = std::forward<UnaryFunc>(f), A = std::forward<Seq>(A) ]
+//       (size_t i) { return f(A[i]); });
+// }
 
 template <typename T>
 auto singleton(T const &v) -> sequence<T> {
@@ -289,7 +303,7 @@ size_t filter_out(In_Seq const &In, Out_Seq Out, F f, flags) {
 template <typename Idx_Type, typename Bool_Seq>
 auto pack_index(Bool_Seq const &Fl, flags fl = no_flag) {
   auto identity = [](size_t i) { return (Idx_Type)i; };
-  return pack(delayed_sequence<size_t>(Fl.size(), identity), Fl, fl);
+  return pack(delayed_seq<size_t>(Fl.size(), identity), Fl, fl);
 }
 
 template <typename InIterator, typename OutIterator, typename Char_Seq>

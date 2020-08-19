@@ -93,7 +93,8 @@ auto random_shuffle(const R& In, random r = random()) {
   // We have to make a redundant copy here due to a const
   // correctness bug inside counting sort.
   // TODO: Fix this
-  auto InCopy = to_sequence(In);
+  //auto InCopy = to_sequence(In);
+  R& InCopy = const_cast<R&>(In);
   auto Out = sequence<T>::uninitialized(In.size());
   internal::random_shuffle_(make_slice(InCopy), make_slice(Out), r);
   return Out;

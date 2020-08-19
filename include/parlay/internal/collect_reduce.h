@@ -40,7 +40,8 @@ void seq_collect_reduce_few(Seq const &A, OutSeq &&Out, Key const &get_key,
                             Value const &get_value, M const &monoid,
                             size_t num_buckets) {
   size_t n = A.size();
-  for (size_t i = 0; i < num_buckets; i++) Out[i] = monoid.identity;
+  for (size_t i = 0; i < num_buckets; i++)
+    assign_uninitialized(Out[i],monoid.identity);
   for (size_t j = 0; j < n; j++) {
     size_t k = get_key(A[j]);
     Out[k] = monoid.f(Out[k], get_value(A[j]));
@@ -53,7 +54,7 @@ auto seq_collect_reduce_few(Seq const &A, Key const &get_key,
                             size_t num_buckets)
     -> sequence<decltype(get_value(A[0]))> {
   using val_type = decltype(get_value(A[0]));
-  sequence<val_type> Out(num_buckets);
+  sequence<val_type> Out = sequence<val_type>::uninitialized(num_buckets);
   seq_collect_reduce_few(A, Out, get_key, get_value, monoid, num_buckets);
   return Out;
 }
@@ -88,14 +89,14 @@ auto collect_reduce_few(Seq const &A, Key const &get_key,
   size_t block_size = ((n - 1) / num_blocks) + 1;
   size_t m = num_blocks * num_buckets;
 
-  sequence<val_type> OutM(m);
+  sequence<val_type> OutM = sequence<val_type>::uninitialized(m);
 
   sliced_for(n, block_size, [&](size_t i, size_t start, size_t end) {
     seq_collect_reduce_few(make_slice(A).cut(start, end),
                            make_slice(OutM).cut(i * num_buckets, (i + 1) * num_buckets),
                            get_key, get_value, monoid, num_buckets);
   });
-
+  
   parallel_for(0, num_buckets,
                [&](size_t i) {
                  val_type o_val = monoid.identity;
@@ -104,7 +105,6 @@ auto collect_reduce_few(Seq const &A, Key const &get_key,
                  Out[i] = o_val;
                },
                1);
-
   return Out;
 }
 
@@ -210,7 +210,7 @@ auto collect_reduce(Seq const &A, Key const &get_key, Value const &get_value,
       log2_up(1 + 2 * (size_t)sizeof(val_type) * n / cache_per_thread), 4);
 
   size_t num_blocks = (1 << bits);
-
+  
   if (num_buckets <= 4 * num_blocks)
     return collect_reduce_few(A, get_key, get_value, monoid, num_buckets);
 

@@ -28,7 +28,7 @@ namespace parlay {
 
 // A delayed sequence is an iterator range that generates its
 // elements on demand.
-template<typename T>
+template<typename T, typename F>
 class delayed_sequence {
  public:
   
@@ -62,7 +62,7 @@ class delayed_sequence {
     using pointer = const T*;
     using reference = T;
 
-    friend class delayed_sequence<T>;
+    friend class delayed_sequence<T,F>;
 
     // ----- Requirements for vanilla iterator ----
 
@@ -168,30 +168,30 @@ class delayed_sequence {
     iterator(const delayed_sequence* _parent, size_t _index)
       : parent(_parent), index(_index) { }
    
-    const delayed_sequence<T>* parent;
+    const delayed_sequence<T,F>* parent;
     size_t index;
   };
   
   // ----------- Constructors and Factories ---------------
 
-  static delayed_sequence<T> constant(size_t n, T value) {
-    return delayed_sequence<T>(n,
+  static delayed_sequence<T,F> constant(size_t n, T value) {
+    return delayed_sequence<T,F>(n,
       [val = std::move(value)](size_t) { return val; });
   }
 
-  template<typename F>
+  //template<typename F>
   delayed_sequence(size_t n, F _f)
     : first(0), last(n), f(std::move(_f)) { }
 
-  template<typename F>
+  //template<typename F>
   delayed_sequence(size_t _first, size_t _last, F _f)
     : first(_first), last(_last), f(std::move(_f)) { }
     
   // Default copy & move, constructor and assignment
-  delayed_sequence(const delayed_sequence<T>&) = default;
-  delayed_sequence(delayed_sequence<T>&&) noexcept = default;
-  delayed_sequence<T>& operator=(const delayed_sequence<T>&) = default;
-  delayed_sequence<T>& operator=(delayed_sequence<T>&&) noexcept = default;
+  delayed_sequence(const delayed_sequence<T,F>&) = default;
+  delayed_sequence(delayed_sequence<T,F>&&) noexcept = default;
+  delayed_sequence<T,F>& operator=(const delayed_sequence<T,F>&) = default;
+  delayed_sequence<T,F>& operator=(delayed_sequence<T,F>&&) noexcept = default;
 
   // ---------------- Iterator Pairs --------------------
 
@@ -248,19 +248,26 @@ class delayed_sequence {
   }
   
   // Swap this with another delayed sequence
-  void swap(delayed_sequence<T>& other) {
+  // template <typename F>
+  void swap(delayed_sequence<T,F>& other) {
     std::swap(*this, other);
   }
   
  private:
   size_t first, last;
-  std::function<T(size_t)> f;
+  F f; //std::function<T(size_t)> f;
 };
+
+// used so second template argument can be inferred
+template <class T, class F>
+delayed_sequence<T,F> delayed_seq (size_t n, F f) {
+  return delayed_sequence<T,F>(n,f);
+}
 
 // Shorter alias for delayed_sequence for
 // backwards compatibility
-template<typename T>
-using delayed_seq = delayed_sequence<T>;
+//template<typename T>
+//using delayed_seq = delayed_sequence<T>;
 
 }  // namespace parlay
 

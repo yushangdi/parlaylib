@@ -160,7 +160,7 @@ sequence<size_t> integer_sort_r(slice<InIterator, InIterator> In,
     std::tie(offsets, one_bucket) =
         count_sort(In, Out, make_slice(get_bits), num_outer_buckets, parallelism,
                    !return_offsets);
-    if (key_bits == 32) t.next("count sort");
+    //if (key_bits == 32) t.next("count sort");
   
     // if all but one bucket are empty, try again on lower bits
     if (one_bucket) {
@@ -216,7 +216,7 @@ sequence<size_t> integer_sort_(slice<InIterator, InIterator> In,
   if (bits == 0) {
     auto get_key = [&](size_t i) { return g(In[i]); };
     auto keys = delayed_seq<size_t>(In.size(), get_key);
-    bits = log2_up(reduce(make_slice(keys), maxm<size_t>()) + 1);
+    bits = log2_up(internal::reduce(make_slice(keys), maxm<size_t>()) + 1);
   }
   return integer_sort_r<inplace_tag>(In, Out, Tmp, g, bits, num_buckets, inplace_tag::value);
 }

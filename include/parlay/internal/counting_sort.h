@@ -104,7 +104,7 @@ std::pair<sequence<size_t>, bool> count_sort_(slice<InIterator, InIterator> In,
                                               size_t num_buckets,
                                               float parallelism = 1.0,
                                               bool skip_if_in_one = false) {
-  timer t("counting sort", true);
+  //timer t("counting sort", true);
   using T = typename slice<InIterator, InIterator>::value_type;
   size_t n = In.size();
   size_t num_threads = num_workers();
@@ -137,6 +137,7 @@ std::pair<sequence<size_t>, bool> count_sort_(slice<InIterator, InIterator> In,
                             counts.begin() + i * num_buckets, num_buckets);
                },
                1, is_nested);
+  //if (!is_nested) t.next("l1");
   
   sequence<size_t> bucket_offsets = sequence<size_t>::uninitialized(num_buckets + 1);
   parallel_for(0, num_buckets,
@@ -181,7 +182,6 @@ std::pair<sequence<size_t>, bool> count_sort_(slice<InIterator, InIterator> In,
                    counts2[start + j] = dest_offsets[j * num_blocks + i];
                },
                1 + 1024 / num_buckets);
-  if (!is_nested) t.next("l5");
   
   parallel_for(0, num_blocks,
                [&](size_t i) {
@@ -192,7 +192,6 @@ std::pair<sequence<size_t>, bool> count_sort_(slice<InIterator, InIterator> In,
                             counts2.begin() + i * num_buckets, num_buckets);
                },
                1, is_nested);
-  if (!is_nested) t.next("l6");
   
   return std::make_pair(std::move(bucket_offsets), false);
 }

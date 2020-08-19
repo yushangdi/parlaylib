@@ -305,7 +305,7 @@ double t_count_sort_bits(size_t n, size_t bits) {
   auto in = parlay::tabulate(n, [&] (size_t i) -> T {return r.ith_rand(i);});
   parlay::sequence<T> out(n);
   auto f = [&] (size_t i) {return in[i] & mask;};
-  auto keys = parlay::delayed_sequence<unsigned char>(n, f);
+  auto keys = parlay::delayed_seq<unsigned char>(n, f);
   time(t, parlay::internal::count_sort(parlay::make_slice(in), parlay::make_slice(out),
 				       parlay::make_slice(keys.begin(),keys.end()), num_buckets););
   for (size_t i=1; i < n; i++) {
