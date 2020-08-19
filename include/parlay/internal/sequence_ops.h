@@ -12,9 +12,13 @@
 namespace parlay {
 namespace internal {
 
-template <typename UnaryFunc>
-auto tabulate(size_t n, UnaryFunc f) -> sequence<decltype(f(0))> {
-  return sequence<decltype(f(0))>(n, [&](size_t i) { return f(i); });
+template<typename UnaryOp>
+auto tabulate(size_t n, UnaryOp&& f) {
+  return sequence<typename std::remove_reference<
+                  typename std::remove_cv<
+                  decltype(f(0))
+                  >::type>::type>::
+                  from_function(n, f);
 }
 
 template <typename Seq, typename UnaryFunc>

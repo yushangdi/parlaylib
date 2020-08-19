@@ -67,8 +67,9 @@ void seq_sort_inplace(slice<Iterator, Iterator> A, const Compare& less, bool sta
 #if defined(OPENMP)
   quicksort_serial(A.begin(), A.size(), less);
 #else
-  if (((sizeof(value_type) > 8) || std::is_pointer<value_type>::value) && !stable)
+  if (((sizeof(value_type) > 8) || std::is_pointer<value_type>::value) && !stable) {
     quicksort(A.begin(), A.size(), less);
+  }
   else
     bucket_sort(A, less, stable);
 #endif
@@ -130,6 +131,7 @@ void sample_sort_(slice<InIterator, InIterator> In,
   if (n < QUICKSORT_THRESHOLD) {
     small_sort_dispatch(In, Out, less, inplace_tag{}, stable);
   } else {
+    //timer t("sample sort", true);
     // The larger these are, the more comparisons are done but less
     // overhead for the transpose.
     size_t bucket_quotient = 4;
@@ -160,9 +162,10 @@ void sample_sort_(slice<InIterator, InIterator> In,
                        [&](size_t i) { return sample_set[OVER_SAMPLE * i]; });
 
     sequence<value_type> Tmp = sequence<value_type>::uninitialized(n);
-
+    //t.next("head");
+    
     // sort each block and merge with samples to get counts for each bucket
-    sequence<s_size_t> counts(m + 1);
+    sequence<s_size_t> counts = sequence<s_size_t>::uninitialized(m + 1);
     counts[m] = 0;
     sliced_for(n, block_size, [&](size_t i, size_t start, size_t end) {
       seq_sort_(In.cut(start, end), make_slice(Tmp).cut(start, end), less, inplace_tag{},
@@ -171,11 +174,13 @@ void sample_sort_(slice<InIterator, InIterator> In,
                 counts.begin() + i * num_buckets, end - start, num_buckets - 1,
                 less);
     });
+    //t.next("first sort");
 
     // move data from blocks to buckets
     auto bucket_offsets =
         transpose_buckets(Tmp.begin(), Out.begin(), counts, n, block_size,
                           num_blocks, num_buckets);
+    //t.next("transpose");
     Tmp.clear();
 
     // sort within each bucket
@@ -188,6 +193,7 @@ void sample_sort_(slice<InIterator, InIterator> In,
          seq_sort_inplace(Out.cut(start, end), less, stable);
        }
      }, 1);
+    //t.next("second sort");
   }
 }
 

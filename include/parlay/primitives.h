@@ -17,15 +17,8 @@ namespace parlay {
 
 // Return a sequence consisting of the elements
 //   f(0), f(1), ... f(n)
-template<typename UnaryOp>
-auto tabulate(size_t n, UnaryOp&& f) {
-  return sequence<typename std::remove_reference<
-                  typename std::remove_cv<
-                  decltype(f(0))
-                  >::type>::type>::
-                  from_function(n, f);
-}
-
+using internal::tabulate;
+  
 // Return a sequence consisting of the elements
 //   f(r[0]), f(r[1]), ..., f(r[n-1])
 template<PARLAY_RANGE_TYPE R, typename UnaryOp>

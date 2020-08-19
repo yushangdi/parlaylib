@@ -158,7 +158,7 @@ sequence<size_t> transpose_buckets(InIterator From, OutIterator To,
     parallel_for(0, num_blocks, f, 1);
   } else {  // for larger input do cache efficient transpose
     // sequence<s_size_t> source_offsets(counts,m+1);
-    dest_offsets = sequence<s_size_t>(m);
+    dest_offsets = sequence<s_size_t>::uninitialized(m);
     transpose<typename sequence<s_size_t>::iterator>(counts.begin(), dest_offsets.begin())
         .trans(num_blocks, num_buckets);
 

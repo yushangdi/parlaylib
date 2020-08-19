@@ -65,15 +65,15 @@ bool get_buckets(slice<Iterator, Iterator> A,
   size_t sample_set_size = num_buckets * over_sample;
   size_t num_pivots = num_buckets - 1;
   
-  auto sample_set = sequence<size_t>::from_function(sample_set_size,
-    [&](size_t i) { return hash64(i) % n; });
+  auto sample_set = tabulate(sample_set_size, [&] (size_t i) -> size_t {
+      return hash64(i) % n; });
 
   // sort the samples
   quicksort(sample_set.begin(), sample_set_size, [&](size_t i, size_t j) {
     return f(A[i], A[j]); });
 
-  auto pivots = sequence<size_t>::from_function(
-      num_pivots, [&](size_t i) { return sample_set[over_sample * (i + 1)]; });
+  auto pivots = tabulate(num_pivots, [&] (size_t i) -> size_t {
+      return sample_set[over_sample * (i + 1)]; });
 
   if (!f(A[pivots[0]], A[pivots[num_pivots - 1]])) return true;
 
@@ -87,6 +87,11 @@ bool get_buckets(slice<Iterator, Iterator> A,
   }
   return false;
 }
+
+ template<typename T>
+  inline void copy_memory(T& a, const T &b) {
+    std::memcpy(&a, &b, sizeof(T));
+  }
 
 template <typename InIterator, typename OutIterator, typename BinaryOp>
 void base_sort(slice<InIterator, InIterator> in,
@@ -102,9 +107,11 @@ void base_sort(slice<InIterator, InIterator> in,
   else {
     quicksort(in.begin(), in.size(), f);
     if (!inplace) {
+      //for (size_t i=0; i < in.size(); i++)
+      //  copy_memory(out[i], in[i]);
       std::copy(std::make_move_iterator(in.begin()),
-                std::make_move_iterator(in.end()),
-                out.begin());
+		std::make_move_iterator(in.end()),
+		out.begin());
     }
   }
 }
@@ -122,7 +129,7 @@ void bucket_sort_r(slice<InIterator, InIterator> in,
     base_sort(in, out, f, stable, inplace);
   } else {
     size_t counts[num_buckets];
-    sequence<uchar> bucketsm(n);
+    sequence<uchar> bucketsm = sequence<uchar>::uninitialized(n);
     uchar* buckets = bucketsm.begin();
     if (get_buckets(in, buckets, f, bits)) {
       base_sort(in, out, f, stable, inplace);
@@ -131,7 +138,7 @@ void bucket_sort_r(slice<InIterator, InIterator> in,
       auto loop = [&] (size_t j) {
         size_t start = counts[j];
         size_t end = (j == num_buckets - 1) ? n : counts[j + 1];
-        bucket_sort_r(make_slice(out).cut(start, end), make_slice(in).cut(start, end), f, stable, !inplace);
+        bucket_sort_r(out.cut(start, end), in.cut(start, end), f, stable, !inplace);
       };
       parallel_for(0, num_buckets, loop, 4);
     }
