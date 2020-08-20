@@ -142,32 +142,33 @@ double pick_test(size_t id, size_t n, size_t rounds,
     return run_multiple(n,rounds,1,"sort uint", t_sort<uint>, half_length, "Gelts/sec");
   case 19:
     return run_multiple(n,rounds,1,"sort 128 bits", t_sort<__int128>, half_length, "Gelts/sec");
-  // case 20:
-  //   return run_multiple(n,rounds,ebytes(16,8),"merge long", t_merge<long>, half_length);
-  // case 21:
-  //   return run_multiple(n,rounds,ebytes(16 + 5 * 80, 8),"mat vect mult", t_mat_vec_mult<size_t,double>, half_length);
-  // case 22:
-  //   return run_multiple(n,rounds,ebytes(68,64),"scatter int", t_scatter<uint>, half_length);
-  // case 23:
-  //   return run_multiple(n,rounds,1,"merge sort long", t_merge_sort<long>, half_length, "Gelts/sec");
-  // case 24:
-  //   return run_multiple(n,rounds,1,"count sort 2bit long", t_count_sort_2<long>, half_length, "Gelts/sec");
-  // case 25:
-  //   return run_multiple(n,rounds,ebytes(24,8),"split3 long", t_split3<long>, half_length);
-  // case 26:
-  //   return run_multiple(n,rounds,1,"quicksort long", t_quicksort<long>, half_length, "Gelts/sec");
-  // case 27:
-  //   return run_multiple(n,rounds,1,"collect reduce 256 buckets uint", t_collect_reduce_8<uint>, half_length,"Gelts/sec");
-  // case 28:
-  //   return run_multiple(n,rounds,ebytes(64,0),"strided read, 128 bytes", t_map_reduce_128, half_length);
-  // case 29:
-  //   return run_multiple(n,rounds,1,"collect reduce sparse uint", t_collect_reduce_pair_sparse<uint>, half_length, "Gelts/sec");
+  case 20:
+    return run_multiple(n,rounds,ebytes(16,8),"merge long", t_merge<long>, half_length);
+  case 21:
+    return run_multiple(n,rounds,ebytes(16,8),"map long (dummy)", t_map<long>, half_length);
+    //return run_multiple(n,rounds,ebytes(16 + 5 * 80, 8),"mat vect mult", t_mat_vec_mult<size_t,double>, half_length);
+  case 22:
+    return run_multiple(n,rounds,ebytes(68,64),"scatter int", t_scatter<uint>, half_length);
+  case 23:
+    return run_multiple(n,rounds,1,"merge sort long", t_merge_sort<long>, half_length, "Gelts/sec");
+  case 24:
+    return run_multiple(n,rounds,1,"count sort 2bit long", t_count_sort_2<long>, half_length, "Gelts/sec");
+  case 25:
+    return run_multiple(n,rounds,ebytes(24,8),"split3 long", t_split3<long>, half_length);
+  case 26:
+    return run_multiple(n,rounds,1,"quicksort long", t_quicksort<long>, half_length, "Gelts/sec");
+  case 27:
+    return run_multiple(n,rounds,1,"collect reduce 256 buckets uint", t_collect_reduce_8<uint>, half_length,"Gelts/sec");
+  case 28:
+    return run_multiple(n,rounds,ebytes(64,0),"strided read, 128 bytes", t_map_reduce_128, half_length);
+  case 29:
+    return run_multiple(n,rounds,1,"collect reduce sparse uint", t_collect_reduce_pair_sparse<uint>, half_length, "Gelts/sec");
   // case 30:
   //   return run_multiple(n,rounds,1,"remove duplicates", t_remove_duplicates<long>, half_length, "Gelts/sec");
   // case 31:
   //   return run_multiple(n,rounds,1,"add to bag long", t_bag<long>, half_length, "Gelts/sec");
-  // case 32:
-  //   return run_multiple(n,rounds,1,"collect reduce dense uint", t_collect_reduce_pair_dense<uint>, half_length, "Gelts/sec");
+  case 30:
+    return run_multiple(n,rounds,1,"collect reduce dense uint", t_collect_reduce_pair_dense<uint>, half_length, "Gelts/sec");
   // case 33:
   //   return run_multiple(n,rounds,ebytes(4,0),"find mid long", t_find_mid<long>, half_length);
 
@@ -194,7 +195,7 @@ int main (int argc, char *argv[]) {
   int test_num = P.getOptionIntValue("-t", -1);
   bool half_length = P.getOption("-halflen");
   global_check = P.getOption("-check");
-  int num_tests = 20;
+  int num_tests = 31;
 
   std::cout << "n = " << n << std::endl;
   std::cout << "rounds = " << rounds << std::endl;

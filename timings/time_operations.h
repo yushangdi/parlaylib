@@ -52,17 +52,17 @@ double t_reduce_add(size_t n, bool) {
   return t;
 }
 
-// double t_map_reduce_128(size_t n, bool) {
-//   int stride = 16;
-//   parlay::sequence<size_t> S(n*stride, (size_t) 1);
-//   auto get = [&] (size_t i) {
-//     // gives marginal improvement (5% or so on aware)
-//     __builtin_prefetch (&S[(i+4)*stride], 0, 3);
-//     return S[i*stride];};
-//   auto Sa = parlay::delayed_sequence<size_t>(n, get);
-//   time(t, parlay::reduce(Sa.slice(0,n-4)););
-//   return t;
-// }
+double t_map_reduce_128(size_t n, bool) {
+  int stride = 16;
+  parlay::sequence<size_t> S(n*stride, (size_t) 1);
+  auto get = [&] (size_t i) {
+    // gives marginal improvement (5% or so on aware)
+    __builtin_prefetch (&S[(i+4)*stride], 0, 3);
+    return S[i*stride];};
+  auto Sa = parlay::delayed_seq<size_t>(n, get);
+  time(t, parlay::reduce(make_slice(Sa).cut(0,n-4)););
+  return t;
+}
 
 template<typename T>
 double t_scan_add(size_t n, bool) {
@@ -90,14 +90,14 @@ double t_pack(size_t n, bool) {
 //   return t;
 // }
 
-// template<typename T>
-// double t_split3(size_t n, bool) {
-//   parlay::random r(0);
-//   parlay::sequence<T> In(n, [&] (size_t i) {return r.ith_rand(i);});
-//   parlay::sequence<T> Out(n, (T) 0);
-//   time(t, parlay::p_split3(In, Out.slice(), std::less<T>()););
-//   return t;
-// }
+template<typename T>
+double t_split3(size_t n, bool) {
+  parlay::random r(0);
+  auto In = parlay::tabulate(n, [&] (size_t i) -> T {return r.ith_rand(i);});
+  parlay::sequence<T> Out(n, (T) 0);
+  time(t, parlay::internal::p_split3(make_slice(In), make_slice(Out), std::less<T>()););
+  return t;
+}
 
 // template<typename T>
 // double t_partition(size_t n, bool) {
@@ -200,15 +200,15 @@ double t_shuffle(size_t n, bool) {
 
 template<typename T>
 bool check_histogram(parlay::sequence<T> const &in, parlay::sequence<T> const &out) {
-  // size_t m = out.size();
-  // auto a = sort(in, std::less<T>());
-  // auto b = get_counts(a, [&] (T a) {return a;}, m);
-  // size_t err_loc = parlay::find_if_index(m, [&] (size_t i) {return out[i] != b[i];});
-  // if (err_loc != m) {
-  //   cout << "ERROR in histogram at location "
-  // 	 << err_loc << ", got " << out[err_loc] << ", expected " << b[err_loc] << endl;
-  //   return false;
-  // }
+  size_t m = out.size();
+  auto a = parlay::sort(in, std::less<T>());
+  auto b = parlay::internal::get_counts(make_slice(a), [&] (T a) {return a;}, m);
+  size_t err_loc = parlay::internal::find_if_index(m, [&] (size_t i) {return out[i] != b[i];});
+  if (err_loc != m) {
+    std::cout << "ERROR in histogram at location "
+      << err_loc << ", got " << out[err_loc] << ", expected " << b[err_loc] << std::endl;
+    return false;
+  }
   return true;
 }
 
@@ -254,14 +254,14 @@ double t_histogram_same(size_t n, bool check) {
 template<typename T, typename Cmp>
 bool check_sort(parlay::sequence<T> const &in, parlay::sequence<T> const &out,
 		Cmp less, std::string sort_name) {
-  // size_t n = in.size();
-  // auto a = parlay::merge_sort(in, std::less<T>());
-  // size_t err_loc = parlay::find_if_index(n, [&] (size_t i) {
-  //     return less(a[i],out[i]) || less(out[i],a[i]);});
-  // if (err_loc != n) {
-  //   cout << "ERROR in " << sort_name << " at location " << err_loc << endl;
-  //   return false;
-  // }
+  size_t n = in.size();
+  auto a = parlay::internal::merge_sort(make_slice(in), std::less<T>());
+  size_t err_loc = parlay::internal::find_if_index(n, [&] (size_t i) {
+      return less(a[i],out[i]) || less(out[i],a[i]);});
+  if (err_loc != n) {
+    std::cout << "ERROR in " << sort_name << " at location " << err_loc << std::endl;
+    return false;
+  }
   return true;
 }
 
@@ -275,27 +275,27 @@ double t_sort(size_t n, bool check) {
   return t;
 }
 
-// // no check since it is used for the sort for checking, and hence
-// // checked against the other sorts
-// template<typename T>
-// double t_merge_sort(size_t n, bool) {
-//   parlay::random r(0);
-//   parlay::sequence<T> in(n, [&] (size_t i) {return r.ith_rand(i)%n;});
-//   parlay::sequence<T> out;
-//   time(t, parlay::merge_sort_inplace(in.slice(), std::less<T>()););
-//   return t;
-// }
+// no check since it is used for the sort for checking, and hence
+// checked against the other sorts
+template<typename T>
+double t_merge_sort(size_t n, bool) {
+  parlay::random r(0);
+  auto in = parlay::tabulate(n, [&] (size_t i) -> T {return r.ith_rand(i)%n;});
+  parlay::sequence<T> out;
+  time(t, parlay::internal::merge_sort_inplace(make_slice(in), std::less<T>()););
+  return t;
+}
 
-// template<typename T>
-// double t_quicksort(size_t n, bool check) {
-//   parlay::random r(0);
-//   parlay::sequence<T> in(n, [&] (size_t i) {return r.ith_rand(i)%n;});
-//   parlay::sequence<T> copy;
-//   if (check) copy = in;
-//   time(t, parlay::p_quicksort_inplace(in.slice(), std::less<T>()););
-//   if (check) check_sort(copy, in, std::less<T>(), "quicksort");
-//   return t;
-// }
+template<typename T>
+double t_quicksort(size_t n, bool check) {
+  parlay::random r(0);
+  auto in = parlay::tabulate(n, [&] (size_t i) -> T {return r.ith_rand(i)%n;});
+  parlay::sequence<T> copy;
+  if (check) copy = in;
+  time(t, parlay::internal::p_quicksort_inplace(make_slice(in), std::less<T>()););
+  if (check) check_sort(copy, in, std::less<T>(), "quicksort");
+  return t;
+}
 
 template<typename T>
 double t_count_sort_bits(size_t n, size_t bits) {
@@ -320,51 +320,51 @@ double t_count_sort_bits(size_t n, size_t bits) {
 template<typename T>
 double t_count_sort_8(size_t n, bool) {return t_count_sort_bits<T>(n, 8);}
 
-// template<typename T>
-// double t_count_sort_2(size_t n, bool) {return t_count_sort_bits<T>(n, 2);}
+template<typename T>
+double t_count_sort_2(size_t n, bool) {return t_count_sort_bits<T>(n, 2);}
 
-// template<typename T>
-// double t_collect_reduce_pair_dense(size_t n, bool check) {
-//   using par = std::pair<T,T>;
-//   parlay::random r(0);
-//   parlay::sequence<par> S(n, [&] (size_t i) -> par {
-//       return par(r.ith_rand(i) % n, 1);});
-//   parlay::sequence<T> out;
-//   auto get_key = [&] (par a) {return a.first;};
-//   auto get_val = [&] (par a) {return a.second;};
-//   time(t, out = parlay::collect_reduce(S, get_key, get_val, parlay::addm<T>(), n););
-//   if (check)
-//     check_histogram(parlay::sequence<T>(n, [&] (size_t i) {return S[i].first;}),
-// 		    out);
-//   return t;
-// }
+template<typename T>
+double t_collect_reduce_pair_dense(size_t n, bool check) {
+  using par = std::pair<T,T>;
+  parlay::random r(0);
+  auto S = parlay::tabulate(n, [&] (size_t i) -> par {
+      return par(r.ith_rand(i) % n, 1);});
+  parlay::sequence<T> out;
+  auto get_key = [&] (par a) {return a.first;};
+  auto get_val = [&] (par a) {return a.second;};
+  time(t, out = parlay::internal::collect_reduce(make_slice(S), get_key, get_val, parlay::addm<T>(), n););
+  if (check)
+    check_histogram(parlay::tabulate(n, [&] (size_t i) -> T {return S[i].first;}),
+		    out);
+  return t;
+}
 
-// template<typename T>
-// double t_collect_reduce_pair_sparse(size_t n, bool) {
-//   using par = std::pair<T,T>;
-//   parlay::random r(0);
-//   struct hasheq {
-//     static inline size_t hash(par a) {return parlay::hash64_2(a.first);}
-//     static inline bool eql(par a, par b) {return a.first == b.first;}
-//   };
-//   parlay::sequence<par> S(n, [&] (size_t i) -> par {
-//       return par(r.ith_rand(i) % n, 1);});
-//   time(t, parlay::collect_reduce_sparse(S, hasheq(), parlay::addm<T>()););
-//   return t;
-// }
+template<typename T>
+double t_collect_reduce_pair_sparse(size_t n, bool) {
+  using par = std::pair<T,T>;
+  parlay::random r(0);
+  struct hasheq {
+    static inline size_t hash(par a) {return parlay::hash64_2(a.first);}
+    static inline bool eql(par a, par b) {return a.first == b.first;}
+  };
+  auto S = parlay::tabulate(n, [&] (size_t i) -> par {
+      return par(r.ith_rand(i) % n, 1);});
+  time(t, parlay::internal::collect_reduce_sparse(make_slice(S), hasheq(), parlay::addm<T>()););
+  return t;
+}
 
-// template<typename T>
-// double t_collect_reduce_8(size_t n, bool) {
-//   using par = std::pair<T,T>;
-//   parlay::random r(0);
-//   size_t num_buckets = (1<<8);
-//   parlay::sequence<par> S(n, [&] (size_t i) {
-//       return par(r.ith_rand(i) % num_buckets, 1);});
-//   auto get_key = [&] (par a) {return a.first;};
-//   auto get_val = [&] (par a) {return a.first;};
-//   time(t, parlay::collect_reduce(S, get_key, get_val, parlay::addm<T>(), num_buckets););
-//   return t;
-// }
+template<typename T>
+double t_collect_reduce_8(size_t n, bool) {
+  using par = std::pair<T,T>;
+  parlay::random r(0);
+  size_t num_buckets = (1<<8);
+  auto S = parlay::tabulate(n, [&] (size_t i) -> par {
+      return par(r.ith_rand(i) % num_buckets, 1);});
+  auto get_key = [&] (par a) {return a.first;};
+  auto get_val = [&] (par a) {return a.first;};
+  time(t, parlay::internal::collect_reduce(make_slice(S), get_key, get_val, parlay::addm<T>(), num_buckets););
+  return t;
+}
 
 // // template<typename T>
 // // double t_collect_reduce_8_tuple(size_t n, bool check) {
@@ -434,14 +434,14 @@ double t_integer_sort_128(size_t n, bool) {
   return t;
 }
 
-// template<typename T>
-// double t_merge(size_t n, bool) {
-//   parlay::sequence<T> in1(n/2, [&] (size_t i) {return 2*i;});
-//   parlay::sequence<T> in2(n-n/2, [&] (size_t i) {return 2*i+1;});
-//   parlay::sequence<T> out;
-//   time(t, out = parlay::merge(in1, in2, std::less<T>()););
-//   return t;
-// }
+template<typename T>
+double t_merge(size_t n, bool) {
+  auto in1 = parlay::tabulate(n/2, [&] (size_t i) -> T {return 2*i;});
+  auto in2 = parlay::tabulate(n-n/2, [&] (size_t i) -> T {return 2*i+1;});
+  parlay::sequence<T> out;
+  time(t, out = parlay::merge(in1, in2, std::less<T>()););
+  return t;
+}
 
 // template<typename T>
 // double t_remove_duplicates(size_t n, bool) {
@@ -505,17 +505,17 @@ double t_integer_sort_128(size_t n, bool) {
 //   return t;
 // }
 
-// template<typename T>
-// double t_find_mid(size_t n, bool check) {
-//   parlay::sequence<T> In(n, [&] (size_t) {return 0;});
-//   In[n/2] = 1;
-//   size_t idx;
-//   time(t, idx = parlay::find(In, 1););
-//   if (check)
-//     if (idx != n/2)
-//       cout << "error in find " << endl;
-//   return t;
-// }
+template<typename T>
+double t_find_mid(size_t n, bool check) {
+  auto In = parlay::tabulate(n, [&] (size_t) -> T {return 0;});
+  In[n/2] = 1;
+  size_t idx;
+  time(t, idx = parlay::find(In, 1););
+  if (check)
+    if (idx != n/2)
+      std::cout << "error in find " << std::endl;
+  return t;
+}
 
 // template<typename T>
 // double t_lexicograhic_compare(size_t n, bool check) {

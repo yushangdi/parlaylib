@@ -298,17 +298,13 @@ void stable_sort_inplace(R&& in) {
 template<PARLAY_RANGE_TYPE R>
 auto integer_sort(const R& in) {
   //auto s = parlay::to_sequence(in);
-  R& s = const_cast<R&>(in);
-  internal::integer_sort_inplace(make_slice(s), [](auto x) { return x; });
-  return s;
+  return internal::integer_sort(make_slice(in), [](auto x) { return x; }); 
 }
 
 template<PARLAY_RANGE_TYPE R, typename Key>
 auto integer_sort(const R& in, Key&& key) {
   //auto s = parlay::to_sequence(in);
-  R& s = const_cast<R&>(in);
-  internal::integer_sort_inplace(make_slice(s), std::forward<Key>(key));
-  return s;
+  return internal::integer_sort(make_slice(in), std::forward<Key>(key));
 }
 
 template<PARLAY_RANGE_TYPE R>
@@ -704,6 +700,23 @@ auto flatten(const R& r) {
   return r;
 }
 
+/* -------------------- Other Utilities -------------------- */
+
+template <PARLAY_RANGE_TYPE R, class Compare>
+auto remove_duplicates_ordered (const R& s, Compare less) {
+  using T = range_value_type_t<R>;
+  return unique(stable_sort(s, less), [&] (T a, T b) {
+      return !less(a,b) && !less(b,a);});
+}
+
+// returns sequence with elementof same type as the first argument
+template <PARLAY_RANGE_TYPE R1, PARLAY_RANGE_TYPE R2>
+auto append (const R1& s1, const R2& s2) {
+  using T = range_value_type_t<R1>;
+  size_t n1 = s1.size();
+  return tabulate(n1 + s2.size(), [&] (size_t i) -> T {
+      return (i < n1) ? s1[i] : s2[i-n1];});
+}
 
 }  // namespace parlay
 

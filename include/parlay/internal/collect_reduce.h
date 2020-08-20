@@ -275,11 +275,11 @@ auto histogram(slice<Iterator, Iterator> A, Integer_ m) {
 // this one is for more buckets than the length of A (i.e. sparse)
 //  A is a sequence of key-value pairs
 //  monoid has fields m.identity and m.f (a binary associative function)
-template <typename Seq, typename HashEq, typename M>
-sequence<typename Seq::value_type> collect_reduce_sparse(Seq const &A,
-                                                         HashEq hasheq,
-                                                         M const &monoid) {
-  using T = typename Seq::value_type;
+template <typename Iterator, typename HashEq, typename M>
+auto collect_reduce_sparse(slice<Iterator,Iterator> A,
+			   HashEq hasheq,
+			   M const &monoid) {
+  using T = typename slice<Iterator, Iterator>::value_type;
   using val_type = typename T::second_type;
 
   size_t n = A.size();
@@ -294,7 +294,7 @@ sequence<typename Seq::value_type> collect_reduce_sparse(Seq const &A,
       else
         B[j++] = B[i];
     };
-    return sequence<T>(j, [&](size_t i) { return B[i]; });
+    return tabulate(j, [&](size_t i) -> T { return B[i]; });
   }
 
   // #bits is selected so each block fits into L3 cache
@@ -316,7 +316,7 @@ sequence<typename Seq::value_type> collect_reduce_sparse(Seq const &A,
 
   // first buckets based on hash using a counting sort
   get_bucket<T, HashEq> gb(A, hasheq, bits);
-  sequence<size_t> bucket_offsets = integer_sort_(
+  sequence<size_t> bucket_offsets = integer_sort_r<std::false_type>(
       make_slice(A), make_slice(B), make_slice(Tmp), gb, bits, num_buckets, false);
 
   // note that this is cache line alligned
@@ -368,7 +368,7 @@ sequence<typename Seq::value_type> collect_reduce_sparse(Seq const &A,
               return B[i + start_l].second;
             };
             auto s = delayed_seq<val_type>(len, f);
-            val_type x = reduce(s, monoid);
+            val_type x = internal::reduce(s, monoid);
             size_t j = 0;
             while (flags[j]) j = (j + 1 == table_size) ? 0 : j + 1;
             assign_uninitialized(my_table[j], T(B[start_l].first, x));
