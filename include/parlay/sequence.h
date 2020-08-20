@@ -787,8 +787,8 @@ class sequence : protected _sequence_base<T, Allocator> {
     return make_slice(end() - len, end());
   }
 
-  // guy : added, perhaps subseq instead?
-  auto slice(size_t s, size_t e) {
+  // guy : added
+  auto cut(size_t s, size_t e) {
     return make_slice(begin()+s, begin()+e);
   }
 
@@ -810,7 +810,7 @@ class sequence : protected _sequence_base<T, Allocator> {
     return make_slice(end() - len, end());
   }
 
-  auto slice(size_t s, size_t e) const {
+  auto cut(size_t s, size_t e) const {
     return make_slice(begin()+s, begin()+e);
   }
 
