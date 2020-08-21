@@ -49,7 +49,8 @@ void seq_write_(InSeq In, OutIterator Out, KeySeq Keys,
   for (size_t i = 0; i < num_buckets; i++) local_offsets[i] = offsets[i];
   for (size_t j = 0; j < In.size(); j++) {
     size_t k = local_offsets[Keys[j]]++;
-    move_uninitialized(Out[k], In[j]);
+    //move_uninitialized(Out[k], In[j]);
+    Out[k] = In[j];
   }
 }
 
@@ -59,7 +60,8 @@ void seq_write_down_(InSeq In, OutIterator Out, KeySeq Keys,
                      OffsetIterator offsets, size_t) {  // num_buckets) {
   for (long j = In.size() - 1; j >= 0; j--) {
     long k = --offsets[Keys[j]];
-    move_uninitialized(Out[k], In[j]);
+    //move_uninitialized(Out[k], In[j]);
+    Out[k] = In[j];
   }
 }
 

@@ -63,12 +63,14 @@ void seq_radix_sort_(slice<InIterator, InIterator> In,
   
   if (swapped && inplace) {
     for (size_t i = 0; i < n; i++) {
-      move_uninitialized(In[i], Out[i]);
+      //move_uninitialized(In[i], Out[i]);
+      In[i] = Out[i];
     }
   }
   else if (!swapped && !inplace) {
     for (size_t i = 0; i < n; i++) {
-      move_uninitialized(Out[i], In[i]);
+      //move_uninitialized(Out[i], In[i]);
+      Out[i] = In[i];
     }
   }
 }
@@ -87,10 +89,16 @@ void seq_radix_sort(slice<InIterator, InIterator> In,
     seq_radix_sort_(Tmp, Out, g, key_bits, inplace);
   } else {
     if (odd) {
-      for (size_t i = 0; i < n; i++) move_uninitialized(Tmp[i], In[i]);
+      for (size_t i = 0; i < n; i++) {
+	//move_uninitialized(Tmp[i], In[i]);
+	Tmp[i] = In[i];
+      }
       seq_radix_sort_(Tmp, Out, g, key_bits, false);
     } else {
-      for (size_t i = 0; i < n; i++) move_uninitialized(Out[i], In[i]);
+      for (size_t i = 0; i < n; i++) {
+	//move_uninitialized(Out[i], In[i]);
+	Out[i] = In[i];
+      }
       seq_radix_sort_(Out, Tmp, g, key_bits, true);
     }
   }
@@ -139,7 +147,10 @@ sequence<size_t> integer_sort_r(slice<InIterator, InIterator> In,
     std::tie(offsets, one_bucket) =
         count_sort(In, Out, make_slice(get_bits), num_bkts, parallelism, inplace);
     if (inplace && !one_bucket)
-      parallel_for(0, n, [&](size_t i) { move_uninitialized(Tmp[i], Out[i]); });
+      parallel_for(0, n, [&](size_t i) {
+	  //move_uninitialized(Tmp[i], Out[i]);
+	  Tmp[i] = Out[i];
+	});
     if (return_offsets)
       return offsets;
     else
@@ -271,7 +282,7 @@ auto integer_sort_with_counts(slice<Iterator, Iterator> In,
 			      size_t num_buckets) {
   size_t bits = log2_up(num_buckets);
   auto R = integer_sort(In, g, bits);
-  return std::make_pair(std::move(R), get_counts<Tint>(R, g, num_buckets));
+  return std::make_pair(std::move(R), get_counts<Tint>(make_slice(R), g, num_buckets));
 }
 
 }
