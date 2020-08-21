@@ -253,11 +253,14 @@ size_t pack_out(In_Seq const &In, Bool_Seq const &Fl, Out_Seq Out,
   return m;
 }
 
-template <typename In_Seq, typename F>
-auto filter(In_Seq const &In, F f) -> sequence<typename In_Seq::value_type> {
-  using T = typename In_Seq::value_type;
+// like filter but applies g before returning result
+template <typename In_Seq, typename F, typename G>
+auto filter_map(In_Seq const &In, F f, G g) {
+  using outT = decltype(g(In[0]));
   size_t n = In.size();
   size_t l = num_blocks(n, _block_size);
+  auto in_mapped = delayed_seq<outT>(n, [&] (size_t i) {return g(In[i]);});
+
   sequence<size_t> Sums(l);
   sequence<bool> Fl(n);
   sliced_for(n, _block_size, [&](size_t i, size_t s, size_t e) {
@@ -266,12 +269,20 @@ auto filter(In_Seq const &In, F f) -> sequence<typename In_Seq::value_type> {
     Sums[i] = r;
   });
   size_t m = scan_inplace(make_slice(Sums), addm<size_t>());
-  sequence<T> Out = sequence<T>::uninitialized(m);
+  sequence<outT> Out = sequence<outT>::uninitialized(m);
   sliced_for(n, _block_size, [&](size_t i, size_t s, size_t e) {
-    pack_serial_at(make_slice(In).cut(s, e), make_slice(Fl).cut(s, e),
+    pack_serial_at(make_slice(in_mapped).cut(s, e),
+		   make_slice(Fl).cut(s, e),
                    make_slice(Out).cut(Sums[i], (i == l - 1) ? m : Sums[i + 1]));
   });
   return Out;
+}
+
+template <typename In_Seq, typename F>
+auto filter(In_Seq const &In, F f) -> sequence<typename In_Seq::value_type> {
+  using T = typename In_Seq::value_type;
+  auto identity = [&] (T x) -> T {return x;}; // no longer needed in c++20
+  return filter_map(In, f, identity);
 }
 
 template <typename In_Seq, typename F>
