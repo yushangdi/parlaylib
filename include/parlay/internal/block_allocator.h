@@ -160,10 +160,10 @@ public:
   }
 
   void clear() {
-    if (num_used_blocks() > 0) 
-      std::cout << "Warning: not clearing memory pool, block_size=" << block_size()
-	   << " : allocated blocks remain" << std::endl;
-    else {
+    if (num_used_blocks() > 0) {
+      //std::cout << "Warning: not clearing memory pool, block_size=" << block_size()
+      // << " : allocated blocks remain" << std::endl;
+    } else {
       // clear lists
       for (int i = 0; i < thread_count; ++i) 
 	local_lists[i].sz = 0;

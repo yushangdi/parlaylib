@@ -106,20 +106,20 @@ namespace parlay {
     return bytes;
   }
 
-  // Reads a file using mmap, returning it as a range
-  // inline range<char*> char_range_from_file(std::string filename) {
-  //   // old fashioned c to deal with mmap
-  //   struct stat sb;
-  //   int fd = open(filename.c_str(), O_RDONLY);
-  //   if (fd == -1) { perror("open"); exit(-1);  }
-  //   if (fstat(fd, &sb) == -1) { perror("fstat"); exit(-1); }
-  //   if (!S_ISREG (sb.st_mode)) { perror("not a file\n");  exit(-1); }
+  //Reads a file using mmap, returning it as a range
+  inline slice<char*,char*> char_range_from_file(std::string filename) {
+    // old fashioned c to deal with mmap
+    struct stat sb;
+    int fd = open(filename.c_str(), O_RDONLY);
+    if (fd == -1) { perror("open"); exit(-1);  }
+    if (fstat(fd, &sb) == -1) { perror("fstat"); exit(-1); }
+    if (!S_ISREG (sb.st_mode)) { perror("not a file\n");  exit(-1); }
     
-  //   char *p = static_cast<char*>(mmap(0, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
-  //   if (p == MAP_FAILED) { close(fd); perror("mmap"); exit(-1); }
-  //   if (close(fd) == -1) { perror("close"); exit(-1); }
-  //   return range<char*>(p, p + sb.st_size);
-  // }
+    char *p = static_cast<char*>(mmap(0, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
+    if (p == MAP_FAILED) { close(fd); perror("mmap"); exit(-1); }
+    if (close(fd) == -1) { perror("close"); exit(-1); }
+    return slice<char*,char*>(p, p + sb.st_size);
+  }
 
   // template <class CharSeq>
   // void char_seq_to_file_map(CharSeq const &S, std::string filename) {
@@ -180,8 +180,8 @@ namespace parlay {
 
     sequence<long> Locations = pack_index<long>(Flags);
   
-    return sequence<sequence<char>>(Locations.size()/2, [&] (size_t i) {
-	return sequence<char>(S.slice(Locations[2*i], Locations[2*i+1]));});
+    return tabulate(Locations.size()/2, [&] (size_t i) -> sequence<char> {
+	return to_sequence(S.cut(Locations[2*i], Locations[2*i+1]));});
   }
 
   template <class Seq, class UnaryPred>
@@ -204,22 +204,22 @@ namespace parlay {
     return r;
   }
 
-  // template <class Seq, class BoolSeq>
-  // auto partition_at(Seq const &S, BoolSeq const &StartFlags)
-  //   -> sequence<range<typename Seq::value_type *>>
-  // {
-  //   using T = typename Seq::value_type;
-  //   size_t n = S.size();
-  //   if (StartFlags.size() != n)
-  //     std::cout << "Unequal sizes in pbbs::partition_at" << std::endl;
-  //   auto sf = delayed_sequence<bool>(n, [&] (size_t i) {
-  // 	return (i==0) || StartFlags[i];});
+  template <class Seq, class BoolSeq>
+  auto partition_at(Seq const &S, BoolSeq const &StartFlags)
+    -> sequence<decltype(make_slice(S))>
+  {
+    // using T = typename Seq::value_type;
+    size_t n = S.size();
+    if (StartFlags.size() != n)
+      std::cout << "Unequal sizes in pbbs::partition_at" << std::endl;
+    auto sf = delayed_seq<bool>(n, [&] (size_t i) {
+  	return (i==0) || StartFlags[i];});
 
-  //   sequence<long> Starts = pack_index<long>(sf);
-  //   return sequence<range<T*>>(Starts.size(), [&] (size_t i) {
-  // 	long end = (i==Starts.size()-1) ? n : Starts[i+1];
-  // 	return range<T*>(S.slice(Starts[i],end));});			    
-  // }
+    sequence<long> Starts = pack_index<long>(sf);
+    return tabulate(Starts.size(), [&] (size_t i) { //-> slice<T*,T*> {
+  	long end = (i==Starts.size()-1) ? n : Starts[i+1];
+  	return S.cut(Starts[i],end);});			    
+  }
 
   template <class Seq, class UnaryPred>
   sequence<sequence<char>> split(Seq const &S, UnaryPred const &is_space) {
@@ -364,6 +364,15 @@ namespace parlay {
   //   auto r = std::to_chars(a, a+20, v);
   //   return sequence<char>(slice<char*>(a, r.ptr));
   // }
-   
+
+  std::ostream& operator<<(std::ostream& os, sequence<char> const &s)
+  {
+    // pad with a zero
+    auto out = tabulate(s.size()+1, [&] (size_t i) -> char{
+	return i == s.size() ? 0 : s[i];});
+    os << out.begin();
+    return os;
+  }
+
 }
 

@@ -23,7 +23,8 @@ using internal::tabulate;
 //   f(r[0]), f(r[1]), ..., f(r[n-1])
 template<PARLAY_RANGE_TYPE R, typename UnaryOp>
 auto map(R&& r, UnaryOp&& f) {
-  return tabulate(parlay::size(r), [&](size_t i) { return f(std::begin(r)[i]); });
+  return tabulate(parlay::size(r), [&f, it = std::begin(r)](size_t i) {
+    return f(it[i]); });
 }
 
 // Return a delayed sequence consisting of the elements
@@ -33,16 +34,16 @@ auto map(R&& r, UnaryOp&& f) {
 // ownership of it by moving it. If r is a reference,
 // the delayed sequence will hold a reference to it, so
 // r must remain alive as long as the delayed sequence.
-// template<PARLAY_RANGE_TYPE R, typename UnaryOp>
-// auto dmap(R&& r, UnaryOp&& f) {
-//   size_t n = parlay::size(r);
-//   return delayed_sequence<typename std::remove_reference<
-//                           typename std::remove_cv<
-//                           decltype(f(std::declval<range_value_type_t<R>&>()))
-//                           >::type>::type>
-//     (n, [ r = std::forward<R>(r), f = std::forward<UnaryOp>(f) ]
-//       (size_t i) { return f(std::begin(r)[i]); });
-// }
+template<PARLAY_RANGE_TYPE R, typename UnaryOp>
+auto dmap(R&& r, UnaryOp&& f) {
+  size_t n = parlay::size(r);
+  return delayed_seq<typename std::remove_reference<
+                          typename std::remove_cv<
+                           decltype(f(std::declval<range_value_type_t<R>&>()))
+                           >::type>::type>
+     (n, [ r = std::forward<R>(r), f = std::forward<UnaryOp>(f) ]
+       (size_t i) { return f(std::begin(r)[i]); });
+}
 
 /* -------------------- Copying -------------------- */
 
@@ -119,7 +120,7 @@ auto scan_inplace(R&& r, Monoid&& m) {
 }
 
 template<PARLAY_RANGE_TYPE R, typename Monoid>
-auto scan_inclusive_inplace(R& r, Monoid&& m) {
+auto scan_inclusive_inplace(R&& r, Monoid&& m) {
   return internal::scan_inplace(make_slice(r), std::forward<Monoid>(m),
     internal::fl_scan_inclusive);
 }
@@ -697,7 +698,7 @@ auto flatten(const R& r) {
       [&](size_t j) { assign_uninitialized(res[offsets[i] + j], it[i][j]); }
      );
   });
-  return r;
+  return res;
 }
 
 /* -------------------- Other Utilities -------------------- */
