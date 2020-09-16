@@ -33,11 +33,6 @@ class hashtable {
   sequence<eType> TA;
   using index = long;
 
-  static void clear(eType* A, size_t n, eType v) {
-    auto f = [&](size_t i) { assign_uninitialized(A[i], v); };
-    parallel_for(0, n, f, granularity(n));
-  }
-
   struct notEmptyF {
     eType e;
     notEmptyF(eType _e) : e(_e) {}
@@ -64,6 +59,10 @@ class hashtable {
   }
 
   ~hashtable() { };
+
+  void clear() {
+    parallel_for(0, m, [&] (size_t i) { TA[i] = empty;});
+  }
 
   // prioritized linear probing
   //   a new key will bump an existing key up if it has a higher priority
@@ -225,8 +224,7 @@ class hashtable {
 
   // returns all the current entries compacted into a sequence
   sequence<eType> entries() {
-    return filter(make_slice(TA, TA + m),
-                  [&](eType v) { return v != empty; });
+    return filter(make_slice(TA), [&] (eType v) { return v != empty; });
   }
 
   index findIndex(kType v) {

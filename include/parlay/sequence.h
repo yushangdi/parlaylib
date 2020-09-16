@@ -35,6 +35,7 @@
 #include "parallel.h"
 #include "range.h"
 #include "slice.h"
+#include "alloc.h"
 
 namespace parlay {
 
@@ -443,7 +444,7 @@ struct _sequence_base {
 // in parallel. It supports parallel construction, resizing,
 // destruction, bulk insertion, bulk erasure, etc. Essentially,
 // it is a parallel version of std::vector.
-template <typename T, typename Allocator = std::allocator<T>>
+template <typename T, typename Allocator = parlay::allocator<T>>
 class sequence : protected _sequence_base<T, Allocator> {
   
   // Ensure that T is not const or volatile
