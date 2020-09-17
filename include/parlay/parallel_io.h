@@ -68,10 +68,12 @@ namespace parlay {
   sequence<sequence<char>>
   tokens(Range const &R, UnaryPred const &is_space);
 
-  // Same as tokens, but returns slices, avoiding allocating memory for subsequences
-  template <class Range, class UnaryPred>
-  auto tokens_ranges(Range const &R, UnaryPred const &is_space) 
-    -> sequence<decltype(make_slice(R))>;
+  // Same as above, but takes a function f to map over a slice for each token.
+  // Useful to e.g., parse strings to ints, or just return the slices
+  // Avoids allocating memory for each subsequence
+  template <class Range, class UnaryPred, class F>
+  auto tokens(Range const &R, UnaryPred const &is_space, const F &f)
+    -> sequence<decltype(f(make_slice(R)))>;
 
   // Returns a sequence of sequences of characters, one per partition.
   // The partitions are marked by start flags, which must be of the same length.
@@ -80,9 +82,9 @@ namespace parlay {
   auto partition_at(CharRange const &R, BoolRange const &StartFlags)
     -> sequence<sequence<char>>;
 
-  // Same as tokens, but returns slices, avoiding allocating memory for subsequences
-  template <class CharRange, class BoolRange>
-  auto partition_at_ranges(CharRange const &R, BoolRange const &StartFlags)
+  // Same as above, but takes a function f to map over a slice for each partition
+  template <class CharRange, class BoolRange, class F>
+  auto partition_at(CharRange const &R, BoolRange const &StartFlags, F const &f)
     -> sequence<decltype(make_slice(R))>;
 
   // Convers a character range to long our double
@@ -94,8 +96,6 @@ namespace parlay {
   // Converts many types to a "pretty printed" character sequence
   //template <typename T>
   //sequence<char> to_char_seq(T s);
-
-
 
   // ********************************
   // char_seq_from_file
@@ -195,8 +195,8 @@ namespace parlay {
     -> sequence<decltype(f(make_slice(R)))> {
     auto S = make_slice(R);
     size_t n = S.size();
-    sequence<bool> Flags(n+1);
     if (n == 0) return sequence<sequence<char>>();
+    auto Flags = sequence<bool>::uninitialized(n+1);
 
     parallel_for(1, n, [&] (long i) {
 	Flags[i] = is_space(S[i-1]) != is_space(S[i]);
@@ -212,21 +212,16 @@ namespace parlay {
   }
 
   template <class Range, class UnaryPred>
-    auto tokens(Range const &R, UnaryPred const &is_space)
+  auto tokens(Range const &R, UnaryPred const &is_space)
     -> sequence<sequence<char>> {
     return tokens(R, is_space, [] (auto x) {return to_sequence(x);});}
-
-  template <class Range, class UnaryPred>
-    auto tokens_ranges(Range const &R, UnaryPred const &is_space)
-    -> sequence<decltype(make_slice(R))> {
-    return tokens(R, is_space, [] (auto x) {return x;});}
 
   // ********************************
   // partition_at
   // ********************************
   
   template <class CharRange, class BoolRange, class F>
-    auto partition_at(CharRange const &R, BoolRange const &StartFlags, F const &f)
+  auto partition_at(CharRange const &R, BoolRange const &StartFlags, F const &f)
     -> sequence<decltype(make_slice(R))>
   {
     auto S = make_slice(R);
@@ -234,44 +229,19 @@ namespace parlay {
     size_t n = S.size();
     if (Flags.size() != n)
       std::cout << "Unequal sizes in pbbs::partition_at" << std::endl;
-    auto sf = delayed_seq<bool>(n, [&] (size_t i) {
-  	return (i==0) || Flags[i];});
 
-    sequence<long> Starts = pack_index<long>(sf);
-    return tabulate(Starts.size(), [&] (size_t i) {
-  	long end = (i==Starts.size()-1) ? n : Starts[i+1];
-  	return f(S.cut(Starts[i],end));});			    
+    sequence<long> Locations = pack_index<long>(Flags);
+
+    return tabulate(Locations.size(), [&] (size_t i) {
+	size_t start = (i==0) ? 0 : Locations[i-1] + 1;
+	size_t end = (i==n) ? n : Locations[i];
+	return f(S.cut(start, end));});
   }
 
   template <class CharRange, class BoolRange>
   auto partition_at(CharRange const &R, BoolRange const &StartFlags)
     -> sequence<sequence<char>> {
     return partition_at(R, StartFlags, [] (auto x) {return to_sequence(x);});}
-
-  template <class CharRange, class BoolRange>
-    auto partition_at_range(CharRange const &R, BoolRange const &StartFlags)
-    -> sequence<decltype(make_slice(R))> {
-    return partition_at(R, StartFlags, [] (auto x) {return x;});}
-
-  // template <class Seq, class UnaryPred>
-  // sequence<char*> tokenize(Seq  &S, UnaryPred const &is_space) {
-  //   size_t n = S.size();
-
-  //   // clear spaces
-  //   parallel_for (0, n, [&] (size_t i) {
-  // 	if (is_space(S[i])) S[i] = 0;}, 10000);
-  //   S[n] = 0;
-
-  //   auto StartFlags = delayed_seq<bool>(n, [&] (long i) {
-  // 	return (i==0) ? S[i] : S[i] && !S[i-1];});
-
-  //   auto Pointers = delayed_seq<char*>(n, [&] (long i) {
-  // 	return S.begin() + i;});
-
-  //   sequence<char*> r = pack(Pointers, StartFlags);
-
-  //   return r;
-  // }
 
   // ********************************
   // Reading from character ranges 
@@ -306,13 +276,12 @@ namespace parlay {
   // ********************************
 
   // helper function
-  template <class T>
-  sequence<T> seq_singleton(T x) {
-    return sequence<T>(1,x);
+  sequence<char> to_char_seq(char const c) {
+    return sequence<char>(1,c);
   }
 
   sequence<char> to_char_seq(bool v) {
-    return seq_singleton(v ? '1' : '0');
+    return to_char_seq(v ? '1' : '0');
   }
 
   sequence<char> to_char_seq(long v) {
@@ -357,9 +326,9 @@ namespace parlay {
   template <class A, class B>
   sequence<char> to_char_seq(std::pair<A,B> const &P) {
     sequence<sequence<char>> s = {
-      seq_singleton('('), to_char_seq(P.first),
+      to_char_seq('('), to_char_seq(P.first),
       to_char_seq((std::string) ", "),
-      to_char_seq(P.second), seq_singleton(')')};
+      to_char_seq(P.second), to_char_seq(')')};
     return flatten(s);
   }
 
@@ -369,8 +338,8 @@ namespace parlay {
     if (n==0) return to_char_seq((std::string) "[]");
     auto separator = to_char_seq((std::string) ", ");
     return flatten(tabulate(2 * n + 1, [&] (size_t i) {
-	  if (i == 0) return seq_singleton('[');
-	  if (i == 2*n) return seq_singleton(']');
+	  if (i == 0) return to_char_seq('[');
+	  if (i == 2*n) return to_char_seq(']');
 	  if (i & 1) return to_char_seq(A[i/2]);
 	  return separator;
 	}));
