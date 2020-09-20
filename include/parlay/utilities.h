@@ -10,6 +10,7 @@
 #include <atomic>
 #include <iostream>
 #include <memory>
+#include <assert.h>
 #include <type_traits>
 
 #include "parallel.h"
