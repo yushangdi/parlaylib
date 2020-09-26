@@ -349,7 +349,7 @@ double t_collect_reduce_pair_sparse(size_t n, bool) {
   };
   auto S = parlay::tabulate(n, [&] (size_t i) -> par {
       return par(r.ith_rand(i) % n, 1);});
-  time(t, parlay::internal::collect_reduce_sparse(make_slice(S), hasheq(), parlay::addm<T>()););
+  time(t, parlay::internal::collect_reduce_sparse(make_slice(S), parlay::addm<T>()););
   return t;
 }
 

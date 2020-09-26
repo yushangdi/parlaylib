@@ -58,7 +58,7 @@ namespace parlay {
   inline void char_seq_to_stream(sequence<char> const &S, std::ostream& os);
 
   // Same but using <<
-  std::ostream& operator<<(std::ostream& os, sequence<char> const &s) {
+  extern inline std::ostream& operator<<(std::ostream& os, sequence<char> const &s) {
     char_seq_to_stream(s, os); return os;}
   
   // Returns a sequence of sequences of characters, one per token.
@@ -171,11 +171,11 @@ namespace parlay {
   // char_seg_to_stream and _file
   // ********************************
     
-  inline void char_seq_to_stream(sequence<char> const &S, std::ostream& os) {
+  extern inline void char_seq_to_stream(sequence<char> const &S, std::ostream& os) {
     os.write(S.data(), S.size());
   }
 
-  int char_seq_to_file(sequence<char> const &S, std::string const &filename) {
+  extern inline int char_seq_to_file(sequence<char> const &S, std::string const &filename) {
     std::ofstream file_stream (filename, std::ios::out | std::ios::binary);
     if (!file_stream.is_open()) {
       std::cout << "Unable to open file for writing: " << filename << std::endl;
@@ -275,50 +275,62 @@ namespace parlay {
   // Printing to a character sequence
   // ********************************
 
-  // helper function
-  sequence<char> to_char_seq(char const c) {
+  template <typename T>
+  sequence<char> to_char_seq(T const &x);
+
+  template <>
+  inline sequence<char> to_char_seq<char>(char const &c) {
     return sequence<char>(1,c);
   }
 
-  sequence<char> to_char_seq(bool v) {
+  template <>
+  inline sequence<char> to_char_seq<bool>(bool const &v) {
     return to_char_seq(v ? '1' : '0');
   }
 
-  sequence<char> to_char_seq(long v) {
+  template <>
+  inline sequence<char> to_char_seq(long const &v) {
     int max_len = 21;
     char s[max_len+1];
     int l = snprintf(s, max_len, "%ld", v);
     return sequence<char>(s, s + std::min(max_len-1, l));
   }
 
-  sequence<char> to_char_seq(int v) {
+  template <>
+  inline sequence<char> to_char_seq<int>(int const &v) {
     return to_char_seq((long) v);};
 
-  sequence<char> to_char_seq(unsigned long v) {
+  template <>
+  inline sequence<char> to_char_seq<unsigned long>(unsigned long const &v) {
     int max_len = 21;
     char s[max_len+1];
     int l = snprintf(s, max_len, "%lu", v);
     return sequence<char>(s, s + std::min(max_len-1, l));
   }
 
-  sequence<char> to_char_seq(unsigned int v) {
+  template <>
+  inline sequence<char> to_char_seq<unsigned int>(unsigned int const &v) {
     return to_char_seq((unsigned long) v);};
 
-  sequence<char> to_char_seq(double v) {
+  template <>
+  inline sequence<char> to_char_seq<double>(double const &v) {
     int max_len = 20;
     char s[max_len+1];
     int l = snprintf(s, max_len, "%.11le", v);
     return sequence<char>(s, s + std::min(max_len-1, l));
   }
 
-  sequence<char> to_char_seq(float v) {
+  template <>
+  inline sequence<char> to_char_seq<float>(float const &v) {
     return to_char_seq((double) v);};
 
-  sequence<char> to_char_seq(std::string const &s) {
+  template <>
+  inline sequence<char> to_char_seq<std::string>(std::string const &s) {
     return tabulate(s.size(), [&] (size_t i) -> char {return s[i];});
   }
 
-  sequence<char> to_char_seq(char* const s) {
+  template <>
+  inline sequence<char> to_char_seq<char*>(char* const &s) {
     size_t l = strlen(s);
     return tabulate(l, [&] (size_t i) -> char {return s[i];});
   }
@@ -350,7 +362,8 @@ namespace parlay {
     return to_char_seq(A.slice());
   }
 
-  sequence<char> to_char_seq(sequence<char> s) {
+  template <>
+  inline sequence<char> to_char_seq<sequence<char>>(sequence<char> const &s) {
     return s; }
   
   // std::to_chars not widely available yet. sigh!!
