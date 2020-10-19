@@ -133,7 +133,7 @@ jobs:
       script:
       - mkdir build
       - cd build
-      - CXX=g++-9 cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
+      - CXX=g++-9 cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_BENCHMARK=On ..
       - make
       - ctest --no-tests=error --output-on-failure
       
@@ -145,7 +145,7 @@ jobs:
       script:
       - mkdir build
       - cd build
-      - cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
+      - cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_BENCHMARK=On ..
       - make
       - ctest --no-tests=error --output-on-failure
 
@@ -155,9 +155,19 @@ jobs:
       script:
       - mkdir build
       - cd build
-      - CC=clang-10 CXX=clang++-10 cmake -DCMAKE_BUILD_TYPE=Release -DPARLAY_TEST=On -DPARLAY_TEST_OMP=On -DPARLAY_TEST_TBB=On -DPARLAY_BENCHMARK=On ..
+      - CC=clang-10 CXX=clang++-10 cmake -DCMAKE_BUILD_TYPE=Release -DPARLAY_TEST=On -DPARLAY_BENCHMARK=On ..
       - make
       - ctest --no-tests=error --output-on-failure
+
+    # Test that the project builds and tests successfully with Clang in Release mode (optimized)
+    - stage: test
+      name: check-relwithdebinfo
+      script:
+        - mkdir build
+        - cd build
+        - CC=clang-10 CXX=clang++-10 cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPARLAY_TEST=On -DPARLAY_BENCHMARK=On ..
+        - make
+        - ctest --no-tests=error --output-on-failure
 
     # -------------------------------------------------------------------------
     #                            ANALYSIS STAGE
