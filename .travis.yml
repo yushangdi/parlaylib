@@ -47,14 +47,41 @@ jobs:
     # -------------------------------------------------------------------------
     #                                TEST STAGE
     # -------------------------------------------------------------------------
-  
+
+    # Test that the project builds and tests successfully with Cilk+ on GCC-7
+    - stage: test
+      name: check-cilkplus
+      script:
+        - mkdir build
+        - cd build
+        - CC=gcc-7 CXX=g++-7 cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_NO_TEST_SCHEDULER=True -DCMAKE_CXX_FLAGS="-fcilkplus -DPARLAY_CILKPLUS" -DCMAKE_EXE_LINKER_FLAGS="-fcilkplus -ldl" ..
+        - make
+        - ctest --no-tests=error --output-on-failure
+
+    # Test that the project builds and tests successfully with Tapir/LLVM OpenCilk
+    - stage: test
+      name: check-opencilk
+      script:
+        - git clone https://github.com/OpenCilk/cilkrts.git
+        - mkdir cilkrts/build && pushd cilkrts/build
+        - cmake -DCMAKE_C_COMPILER=gcc-7 -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_INSTALL_PREFIX=/usr/local/
+        - make && make sudo install
+        - popd
+        - wget --quiet https://github.com/OpenCilk/opencilk-project/releases/download/opencilk%2Fbeta3/OpenCilk-9.0.1-Linux.tar.gz
+        - tar -xf OpenCilk-9.0.1-Linux.tar.gz
+        - mkdir build
+        - cd build
+        - cmake -DCMAKE_C_COMPILER=../OpenCilk-9.0.1-Linux/bin/clang -DCMAKE_CXX_COMPILER=../OpenCilk-9.0.1-Linux/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_NO_TEST_SCHEDULER=True -DCMAKE_CXX_FLAGS="-fcilkplus -DPARLAY_OPENCILK" -DCMAKE_EXE_LINKER_FLAGS="-fcilkplus -ldl" ..
+        - make
+        - ctest --no-tests=error --output-on-failure
+
     # Test that the project builds and tests successfully with GCC
     - stage: test
       name: check-gcc
       script:
       - mkdir build
       - cd build
-      - CC=gcc-9 CXX=g++-9 cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_TEST_OMP=On -DPARLAY_TEST_TBB=On -DPARLAY_BENCHMARK=On ..
+      - CC=gcc-9 CXX=g++-9 cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_BENCHMARK=On ..
       - make
       - ctest --no-tests=error --output-on-failure
       
@@ -64,7 +91,7 @@ jobs:
       script:
       - mkdir build
       - cd build
-      - CC=clang-10 CXX=clang++-10 cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_TEST_OMP=On -DPARLAY_TEST_TBB=On -DPARLAY_BENCHMARK=On ..
+      - CC=clang-10 CXX=clang++-10 cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_BENCHMARK=On ..
       - make
       - ctest --no-tests=error --output-on-failure
       
@@ -74,20 +101,10 @@ jobs:
       script:
       - mkdir build
       - cd build
-      - CC=clang-10 CXX=clang++-10 cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DUSE_LIBCXX=On -DPARLAY_TEST_OMP=On -DPARLAY_TEST_TBB=On -DPARLAY_BENCHMARK=On ..
+      - CC=clang-10 CXX=clang++-10 cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DUSE_LIBCXX=On -DPARLAY_BENCHMARK=On ..
       - make
       - ctest --no-tests=error --output-on-failure
-      
-    # Test that the project builds and tests successfully with GCC 7 (with Cilk support)
-    - stage: test
-      name: check-gcc-cilk
-      script:
-      - mkdir build
-      - cd build
-      - CC=gcc-7 CXX=g++-7 cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_TEST_CILK=On ..
-      - make
-      - ctest --no-tests=error --output-on-failure
-      
+
     # Test that the project builds and tests successfully on OSX with GCC
     - stage: test
       name: check-apple-gcc

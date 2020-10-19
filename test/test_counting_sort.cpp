@@ -19,7 +19,7 @@ TEST(TestCountingSort, TestCountingSort) {
   auto s = parlay::tabulate(100000, [](unsigned long long i) -> unsigned long long {
     return (50021 * i + 61) % num_buckets;
   });
-  auto [sorted, offsets] = parlay::internal::count_sort(parlay::make_slice(s), [](auto x) { return x; }, num_buckets);
+  auto sorted = parlay::internal::count_sort(parlay::make_slice(s), [](auto x) { return x; }, num_buckets).first;
   ASSERT_EQ(s.size(), sorted.size());
   std::sort(std::begin(s), std::end(s));
   ASSERT_EQ(s, sorted);
@@ -33,9 +33,9 @@ TEST(TestCountingSort, TestCountingSortUnstable) {
     x.y = 0;
     return x;
   });
-  auto [sorted, offsets] = parlay::internal::count_sort(parlay::make_slice(s), [](const auto& x) -> unsigned long long {
+  auto sorted = parlay::internal::count_sort(parlay::make_slice(s), [](const auto& x) -> unsigned long long {
     return x.x;
-  }, num_buckets);
+  }, num_buckets).first;
   ASSERT_EQ(s.size(), sorted.size());
   std::stable_sort(std::begin(s), std::end(s));
   ASSERT_EQ(s, sorted);

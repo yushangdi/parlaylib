@@ -43,9 +43,11 @@ endif()
 
 # ----------------------------- Parlay Scheduling ------------------------------
 
-add_dtests(NAME test_scheduler FILES test_scheduler.cpp LIBS parlay)
-add_dtests(NAME test_parlay_plugin FILES test_parlay_scheduler_plugin.cpp LIBS parlay)
-add_dtests(NAME test_seq_scheduling FILES test_seq_scheduling.cpp LIBS parlay)
+if(NOT PARLAY_NO_TEST_SCHEDULER)
+  add_dtests(NAME test_scheduler FILES test_scheduler.cpp LIBS parlay)
+  add_dtests(NAME test_parlay_plugin FILES test_parlay_scheduler_plugin.cpp LIBS parlay)
+  add_dtests(NAME test_seq_scheduling FILES test_seq_scheduling.cpp LIBS parlay)
+endif()
 
 # ----------------------------- Parlay Allocator ------------------------------
 
