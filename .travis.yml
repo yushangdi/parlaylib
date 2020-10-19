@@ -64,14 +64,14 @@ jobs:
       script:
         - git clone https://github.com/OpenCilk/cilkrts.git
         - mkdir cilkrts/build && pushd cilkrts/build
-        - cmake -DCMAKE_C_COMPILER=gcc-7 -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_INSTALL_PREFIX=/usr/local/
+        - cmake -DCMAKE_C_COMPILER=gcc-7 -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_INSTALL_PREFIX=/usr/local/ ..
         - make && make sudo install
         - popd
         - wget --quiet https://github.com/OpenCilk/opencilk-project/releases/download/opencilk%2Fbeta3/OpenCilk-9.0.1-Linux.tar.gz
         - tar -xf OpenCilk-9.0.1-Linux.tar.gz
         - mkdir build
         - cd build
-        - cmake -DCMAKE_C_COMPILER=../OpenCilk-9.0.1-Linux/bin/clang -DCMAKE_CXX_COMPILER=../OpenCilk-9.0.1-Linux/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_NO_TEST_SCHEDULER=True -DCMAKE_CXX_FLAGS="-fcilkplus -DPARLAY_OPENCILK" -DCMAKE_EXE_LINKER_FLAGS="-fcilkplus -ldl" ..
+        - cmake -DCMAKE_C_COMPILER=$PWD/../OpenCilk-9.0.1-Linux/bin/clang -DCMAKE_CXX_COMPILER=$PWD/../OpenCilk-9.0.1-Linux/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DPARLAY_NO_TEST_SCHEDULER=True -DCMAKE_CXX_FLAGS="-fcilkplus -DPARLAY_OPENCILK" -DCMAKE_EXE_LINKER_FLAGS="-fcilkplus -ldl" ..
         - make
         - ctest --no-tests=error --output-on-failure
 
