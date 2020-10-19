@@ -65,7 +65,7 @@ jobs:
         - git clone https://github.com/OpenCilk/cilkrts.git
         - mkdir cilkrts/build && pushd cilkrts/build
         - cmake -DCMAKE_C_COMPILER=gcc-7 -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_INSTALL_PREFIX=/usr/local/ ..
-        - make && make sudo install
+        - make && sudo make install
         - popd
         - wget --quiet https://github.com/OpenCilk/opencilk-project/releases/download/opencilk%2Fbeta3/OpenCilk-9.0.1-Linux.tar.gz
         - tar -xf OpenCilk-9.0.1-Linux.tar.gz
