@@ -8,7 +8,7 @@
 #ifndef PARLAY_BLOCK_ALLOCATOR_H_
 #define PARLAY_BLOCK_ALLOCATOR_H_
 
-#include <cstdio>
+#include <cstddef>
 #include <cstdlib>
 #include <cmath>
 
@@ -38,12 +38,12 @@ private:
     size_t sz;
     block_p head;
     block_p mid;
-    char cache_line[pad_size];
+    std::byte cache_line[pad_size];
     thread_list() : sz(0), head(nullptr) {};
   };
 
   bool initialized{false};
-  concurrent_stack<char*> pool_roots;
+  concurrent_stack<std::byte*> pool_roots;
   concurrent_stack<block_p> global_stack;
   thread_list* local_lists;
 
@@ -66,10 +66,10 @@ public:
 
   auto initialize_list(block_p start) -> block_p {
     parallel_for (0, list_length - 1, [&] (size_t i) {
-					block_p p =  reinterpret_cast<block_p>(reinterpret_cast<char*>(start) + i * block_size_);
-					p->next = reinterpret_cast<block_p>(reinterpret_cast<char*>(p) + block_size_);
+					block_p p =  reinterpret_cast<block_p>(reinterpret_cast<std::byte*>(start) + i * block_size_);
+					p->next = reinterpret_cast<block_p>(reinterpret_cast<std::byte*>(p) + block_size_);
     }, 1000, true);
-    block_p last =  reinterpret_cast<block_p>(reinterpret_cast<char*>(start) + (list_length-1) * block_size_);
+    block_p last =  reinterpret_cast<block_p>(reinterpret_cast<std::byte*>(start) + (list_length-1) * block_size_);
     last->next = nullptr;
     return start;
   }
@@ -81,8 +81,8 @@ public:
     return blocks_allocated.load() - free_blocks;
   }
 
-  auto allocate_blocks(size_t num_blocks) -> char* {
-    char* start = (char*) ::operator new(num_blocks * block_size_+ pad_size, std::align_val_t{pad_size});
+  auto allocate_blocks(size_t num_blocks) -> std::byte* {
+    std::byte* start = (std::byte*) ::operator new(num_blocks * block_size_+ pad_size, std::align_val_t{pad_size});
     assert(start != nullptr);
 
     blocks_allocated.fetch_add(num_blocks);
@@ -104,7 +104,7 @@ public:
   // Allocate n elements across however many lists are needed (rounded up)
   void reserve(size_t n) {
     size_t num_lists = thread_count + (n + list_length - 1) / list_length;
-    char* start = allocate_blocks(list_length*num_lists);
+    std::byte* start = allocate_blocks(list_length*num_lists);
     parallel_for(0, num_lists, [&] (size_t i) {
       block_p offset = reinterpret_cast<block_p>(start + i * list_length * block_size_);
       global_stack.push(initialize_list(offset));
@@ -150,7 +150,7 @@ public:
         local_lists[i].sz = 0;
   
       // throw away all allocated memory
-      std::optional<char*> x;
+      std::optional<std::byte*> x;
       while ((x = pool_roots.pop())) ::operator delete(*x, std::align_val_t{pad_size});
       pool_roots.clear();
       global_stack.clear();
@@ -170,7 +170,9 @@ public:
     if (local_lists[id].sz == list_length+1) {
       local_lists[id].mid = local_lists[id].head;
     } else if (local_lists[id].sz == 2*list_length) {
+      assert(id == worker_id());
       global_stack.push(local_lists[id].mid->next);
+      assert(id == worker_id());
       local_lists[id].mid->next = nullptr;
       local_lists[id].sz = list_length;
     }
@@ -182,9 +184,26 @@ public:
   inline void* alloc() {
     size_t id = worker_id();
 
-    if (local_lists[id].sz == 0)  {
-      local_lists[id].head = get_list();
-      local_lists[id].sz = list_length;
+    if (local_lists[id].sz == 0) {
+      // Have to be careful with the following: get_list() makes a parallel
+      // call, and hence on some schedulers, the continuation might get stolen
+      // and moved to another thread, so we will be on a different worker_id()
+      // than before.
+      auto new_list = get_list();
+      id = worker_id();                      // Reload in case of a steal
+
+      // If we are still on a worker with an empty local list, add
+      // the newly allocated memory to it. Otherwise, if we switched
+      // to a worker that already has available memory, just give
+      // the memory back to the global pool
+      if (local_lists[id].sz == 0) {
+        local_lists[id].head = new_list;
+        local_lists[id].sz = list_length;
+      }
+      else {
+        global_stack.push(new_list);
+        assert(id == worker_id());
+      }
     }
 
     local_lists[id].sz--;

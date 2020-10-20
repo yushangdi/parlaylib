@@ -118,10 +118,8 @@ public:
   
     for (size_t i = 0; i < num_small; i++) {
       size_t bucket_size = sizes[i];
-      if (bucket_size < 8)
-        throw std::invalid_argument("for small_allocator, bucket sizes must be at least 8");
-      if (!(bucket_size > prev_bucket_size))
-        throw std::invalid_argument("for small_allocator, bucket sizes must increase");
+      assert(bucket_size >= 8);
+      assert(bucket_size > prev_bucket_size);
       prev_bucket_size = bucket_size;
       new (static_cast<void*>(std::addressof(small_allocators[i]))) 
       block_allocator(bucket_size, 0, small_alloc_block_size - 64); 
