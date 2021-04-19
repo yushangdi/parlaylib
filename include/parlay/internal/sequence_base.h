@@ -307,9 +307,10 @@ struct sequence_base {
 
       header* buffer;
     }
-#if defined(__GNUC__)
-    __attribute__((packed))
-#endif
+// TODO: fix warnings
+//#if defined(__GNUC__)
+//    __attribute__((packed))
+//#endif
     ;
 
     // A not-short-size-optimized sequence. Elements are
@@ -338,9 +339,10 @@ struct sequence_base {
 
       const value_type* data() const { return buffer.data(); }
     }
-#if defined(__GNUC__)
-    __attribute__((packed))
-#endif
+// TODO: fix warnings
+//#if defined(__GNUC__)
+//    __attribute__((packed))
+//#endif
     ;
 
     // The maximum capacity of a short-size-optimized sequence
@@ -377,9 +379,10 @@ struct sequence_base {
         short_seq short_mode;
         long_seq long_mode;
       }
-#if defined(__GNUC__)
-      __attribute__((packed))
-#endif
+// TODO: fix warnings
+//#if defined(__GNUC__)
+//      __attribute__((packed))
+//#endif
       ;
 
       uint8_t small_n : 7;
