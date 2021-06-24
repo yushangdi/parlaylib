@@ -45,7 +45,7 @@ TEST(TestPrimitives, TestDelayedMap) {
   auto s = parlay::tabulate(100000, [](long long i) -> long long {
     return (50021 * i + 61) % (1 << 20);
   });
-  auto m = parlay::delayed_map(s, [](int x) { return 3*x - 1; });
+  auto m = parlay::delayed_map(s, [](long long x) { return 3*x - 1; });
   ASSERT_EQ(m.size(), s.size());
   for (size_t i = 0; i < 100000; i++) {
     ASSERT_EQ(m[i], 3*s[i] - 1);
@@ -92,11 +92,10 @@ TEST(TestPrimitives, TestScanInclusive) {
   auto s = parlay::tabulate(100000, [](long long i) -> long long {
     return (50021 * i + 61) % (1 << 20);
   });
-  auto [scanz, total] = parlay::scan_inclusive(s);
+  auto scanz = parlay::scan_inclusive(s);
   auto psums = parlay::sequence<long long>(100000);
   std::partial_sum(std::begin(s), std::end(s), std::begin(psums));
   ASSERT_EQ(scanz, psums);
-  ASSERT_EQ(total, std::accumulate(std::begin(s), std::end(s), 0LL));
 }
 
 TEST(TestPrimitives, TestScanInplace) {
@@ -144,11 +143,10 @@ TEST(TestPrimitives, TestScanInclusiveMax) {
   auto s = parlay::tabulate(100000, [](long long i) -> long long {
     return (50021 * i + 61) % (1 << 20);
   });
-  auto [scanz, total] = parlay::scan_inclusive(s, parlay::maxm<long long>());
+  auto scanz = parlay::scan_inclusive(s, parlay::maxm<long long>());
   auto psums = parlay::sequence<long long>(100000);
   std::partial_sum(std::begin(s), std::end(s), std::begin(psums), TakeMax<long long>());
   ASSERT_EQ(scanz, psums);
-  ASSERT_EQ(total, std::accumulate(std::begin(s), std::end(s), 0LL, TakeMax<long long>()));
 }
 
 TEST(TestPrimitives, TestScanInplaceMax) {
@@ -593,30 +591,54 @@ TEST(TestPrimitives, TestMapTokensVoid) {
 }
 
 TEST(TestPrimitives, TestSplitAt) {
-  auto seq = parlay::tabulate(999999, [](int i) { return i; });
-  auto seqs = parlay::split_at(seq, parlay::delayed_seq<bool>(999999, [&](int i) -> int {
-    return i % 1000 == 0;
+  auto seq = parlay::sequence<int>(999999, 1);
+  auto seqs = parlay::split_at(seq, parlay::delayed_tabulate(999999,[&](size_t i) -> bool {
+    return i % 1000 == 999;
   }));
   
   auto ans = parlay::tabulate(1000, [](int i) -> parlay::sequence<int> {
-    if (i == 0) return {};
-    else return parlay::tabulate(999, [=](int j) -> int { return 1000 * (i - 1) + j + 1; });
-  });
+      return parlay::sequence((i==999) ? 999 : 1000, 1);});
   
   ASSERT_EQ(seqs, ans);
 }
 
 TEST(TestPrimitives, TestMapSplitAt) {
-  auto seq = parlay::tabulate(999999, [](int i) { return i; });
+  auto seq = parlay::sequence<int>(999999, 1);
   auto map_reduces = parlay::map_split_at(seq,
-    parlay::delayed_seq<bool>(999999, [&](int i) { return (i % 1000 == 0); }),
+    parlay::delayed_tabulate(999999, [&](size_t i) -> bool { return i % 1000 == 999; }),
     [](const auto& s) { return parlay::reduce(s); });
   
-  auto splits = parlay::tabulate(1000, [](int i) -> parlay::sequence<int> {
-    if (i == 0) return {};
-    else return parlay::tabulate(999, [=](int j) -> int { return 1000 * (i - 1) + j + 1; });
-  });
-  auto answer = parlay::map(splits, [](const auto& s) { return parlay::reduce(s); });
+  auto answer = parlay::tabulate(1000, [](int i) -> int {
+      return (i == 999) ? 999 : 1000;});
   
   ASSERT_EQ(map_reduces, answer);
 }
+
+// TEST(TestPrimitives, TestSplitAt) {
+//   auto seq = parlay::tabulate(999999, [](int i) { return i; });
+//   auto seqs = parlay::split_at(seq, parlay::delayed_seq<bool>(999999, [&](int i) -> int {
+//     return i % 1000 == 0;
+//   }));
+  
+//   auto ans = parlay::tabulate(1000, [](int i) -> parlay::sequence<int> {
+//     if (i == 0) return {};
+//     else return parlay::tabulate(999, [=](int j) -> int { return 1000 * (i - 1) + j + 1; });
+//   });
+  
+//   ASSERT_EQ(seqs, ans);
+// }
+
+// TEST(TestPrimitives, TestMapSplitAt) {
+//   auto seq = parlay::tabulate(999999, [](int i) { return i; });
+//   auto map_reduces = parlay::map_split_at(seq,
+//     parlay::delayed_seq<bool>(999999, [&](int i) { return (i % 1000 == 0); }),
+//     [](const auto& s) { return parlay::reduce(s); });
+  
+//   auto splits = parlay::tabulate(1000, [](int i) -> parlay::sequence<int> {
+//     if (i == 0) return {};
+//     else return parlay::tabulate(999, [=](int j) -> int { return 1000 * (i - 1) + j + 1; });
+//   });
+//   auto answer = parlay::map(splits, [](const auto& s) { return parlay::reduce(s); });
+  
+//   ASSERT_EQ(map_reduces, answer);
+// }

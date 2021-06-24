@@ -43,6 +43,7 @@ private:
   size_t max_small;
   size_t max_size;
   std::atomic<size_t> large_allocated{0};
+  std::atomic<size_t> large_used{0};
 
   std::unique_ptr<concurrent_stack<void*>[]> large_buckets;
   struct block_allocator *small_allocators;
@@ -52,6 +53,7 @@ private:
 
     size_t bucket = num_small;
     size_t alloc_size;
+    large_used += n;
 
     if (n <= max_size) {
       while (n > sizes[bucket]) bucket++;
@@ -68,13 +70,14 @@ private:
 
     void* a = (void*) ::operator new(alloc_size, std::align_val_t{large_align});
     if (a == nullptr) throw std::bad_alloc();
-    
+
     large_allocated += n;
     return a;
   }
 
   void deallocate_large(void* ptr, size_t n) {
-    if (n > max_size) { 
+    large_used -= n;
+    if (n > max_size) {
       ::operator delete(ptr, std::align_val_t{large_align});
       large_allocated -= n;
     } else {
@@ -85,7 +88,7 @@ private:
   }
 
   const size_t small_alloc_block_size = (1 << 20);
-  
+
   pool_allocator(const pool_allocator&) = delete;
   pool_allocator(pool_allocator&&) = delete;
   pool_allocator& operator=(const pool_allocator&) = delete;
@@ -115,14 +118,14 @@ public:
       ::operator new(num_buckets * sizeof(struct block_allocator), std::align_val_t{alignof(block_allocator)} );
 
     size_t prev_bucket_size = 0;
-  
+
     for (size_t i = 0; i < num_small; i++) {
       size_t bucket_size = sizes[i];
       assert(bucket_size >= 8);
       assert(bucket_size > prev_bucket_size);
       prev_bucket_size = bucket_size;
-      new (static_cast<void*>(std::addressof(small_allocators[i]))) 
-      block_allocator(bucket_size, 0, small_alloc_block_size - 64); 
+      new (static_cast<void*>(std::addressof(small_allocators[i])))
+      block_allocator(bucket_size, 0, small_alloc_block_size - 64);
     }
   }
 
@@ -174,6 +177,20 @@ public:
     std::cout << "Total bytes used = " << total_u << std::endl;
   }
 
+  // pair of total currently used space, and total unused space the allocator has in reserve
+  std::pair<size_t,size_t> stats() {
+    size_t total_a = large_allocated;
+    size_t total_u = large_used;
+    for (size_t i = 0; i < num_small; i++) {
+      size_t bucket_size = sizes[i];
+      size_t allocated = small_allocators[i].num_allocated_blocks();
+      size_t used = small_allocators[i].num_used_blocks();
+      total_a += allocated * bucket_size;
+      total_u += used * bucket_size;
+    }
+    return std::pair(total_u, total_a-total_u);
+  }
+
   void clear() {
     for (size_t i = num_small; i < num_buckets; i++) {
       std::optional<void*> r = large_buckets[i-num_small].pop();
@@ -203,15 +220,23 @@ inline std::vector<size_t> default_sizes() {
 
 
 
+#ifndef PARLAY_USE_STD_ALLOC
 namespace internal {
-  
 extern inline pool_allocator& get_default_allocator() {
   static pool_allocator default_allocator(default_sizes());
   return default_allocator;
 }
 
-}  // namespace internal
+// pair of total currently used space, and total unused space the allocator has in reserve
+extern inline std::pair<size_t,size_t> memory_usage() {
+  return get_default_allocator().stats();
+}
 
+// pair of total currently used space, and total unused space the allocator has in reserve
+extern inline void memory_clear() {
+  return get_default_allocator().clear();
+}
+}  // namespace internal
 
 // ****************************************
 // Following Matches the c++ Allocator specification (minimally)
@@ -230,8 +255,8 @@ struct allocator {
     internal::get_default_allocator().deallocate((void*) ptr, n * sizeof(T));
   }
 
-  allocator() = default;
-  template <class U> constexpr allocator(const allocator<U>&) {}
+  constexpr allocator() = default;
+  template <class U> constexpr allocator(const allocator<U>&) noexcept { }
 };
 
 template <class T, class U>
@@ -239,42 +264,66 @@ bool operator==(const allocator<T>&, const allocator<U>&) { return true; }
 template <class T, class U>
 bool operator!=(const allocator<T>&, const allocator<U>&) { return false; }
 
+constexpr size_t size_offset = 1; // in size_t sized words
+
+// needs to be at least size_offset * sizeof(size_t)
+inline size_t header_size(size_t n) { // in bytes
+  return (n >= 1024) ? 64 : (n & 15) ? 8 : (n & 63) ? 16 : 64;
+}
+
+// allocates and tags with a header (8, 16 or 64 bytes) that contains the size
+extern inline void* p_malloc(size_t n) {
+  size_t hsize = header_size(n);
+  void* ptr = internal::get_default_allocator().allocate(n + hsize);
+  void* r = (void*) (((char*) ptr) + hsize);
+  *(((size_t*) r) - size_offset) = n; // puts size in header
+  return r;
+}
+
+// reads the size, offsets the header and frees
+extern inline void p_free(void* ptr) {
+  size_t n = *(((size_t*) ptr) - size_offset);
+  size_t hsize = header_size(n);
+  if (hsize > (1ull << 48)) {
+    std::cout << "corrupted header in my_free" << std::endl;
+    throw std::bad_alloc();
+  }
+  internal::get_default_allocator().deallocate((void*) (((char*) ptr) - hsize),
+                                               n + hsize);
+}
+#endif
+
 // ****************************************
 // Static allocator for single items of a given type, e.g.
 //   using long_allocator = type_allocator<long>;
 //   long* foo = long_allocator::alloc();
 //   *foo = (long) 23;
 //   long_allocator::free(foo);
-// Uses block allocator, and is headerless  
+// Uses block allocator, and is headerless
 // ****************************************
 
 template <typename T>
 class type_allocator {
 public:
-  static constexpr size_t default_alloc_size = 0;
-  static block_allocator allocator;
-  static const bool initialized{true};
-  static T* alloc() { return (T*) allocator.alloc();}
-  static void free(T* ptr) {allocator.free((void*) ptr);}
+  static constexpr inline size_t default_alloc_size = 0;
+  static constexpr inline bool initialized = true;
+  static inline block_allocator allocator = block_allocator(sizeof(T));
+
+  static T* alloc() { return static_cast<T*>(allocator.alloc()); }
+  static void free(T* ptr) { allocator.free(static_cast<void*>(ptr)); }
 
   // for backward compatibility
-  //static void init(size_t _alloc_size = 0, size_t _list_size=0) {};
   static void init(size_t, size_t) {};
   static void init() {};
-  static void reserve(size_t n = default_alloc_size) {
-    allocator.reserve(n);
-  }
-  static void finish() {allocator.clear();
-  }
-  static size_t block_size () {return allocator.block_size();}
-  static size_t num_allocated_blocks() {return allocator.num_allocated_blocks();}
-  static size_t num_used_blocks() {return allocator.num_used_blocks();}
-  static size_t num_used_bytes() {return num_used_blocks() * block_size();}
-  static void print_stats() {allocator.print_stats();}
+  static void reserve(size_t n = default_alloc_size) { allocator.reserve(n); }
+  static void finish() { allocator.clear(); }
+  static size_t block_size () { return allocator.block_size(); }
+  static size_t num_allocated_blocks() { return allocator.num_allocated_blocks(); }
+  static size_t num_used_blocks() { return allocator.num_used_blocks(); }
+  static size_t num_used_bytes() { return num_used_blocks() * block_size(); }
+  static void print_stats() { allocator.print_stats(); }
 };
 
-template<typename T>
-block_allocator type_allocator<T>::allocator = block_allocator(sizeof(T));
 
 }  // namespace parlay
 
