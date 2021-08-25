@@ -1,7 +1,7 @@
 
 # ParlayLib - A Toolkit for Programming Parallel Algorithms on Shared-Memory Multicore Machines
 
-[![Build Status](https://travis-ci.org/cmuparlay/parlaylib.svg?branch=master)](https://travis-ci.org/cmuparlay/parlaylib)
+[![Build Status](https://travis-ci.com/cmuparlay/parlaylib.svg?branch=master)](https://travis-ci.com/github/cmuparlay/parlaylib)
 [![Build status](https://ci.appveyor.com/api/projects/status/2458wr1nbcusxhqb/branch/master?svg=true)](https://ci.appveyor.com/project/DanielLiamAnderson/parlaylib/branch/master)
 [![codecov](https://codecov.io/gh/cmuparlay/parlaylib/branch/master/graph/badge.svg)](https://codecov.io/gh/cmuparlay/parlaylib)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -719,15 +719,29 @@ auto merge(const R1& r1, const R2& r2, BinaryPred pred)
 **merge** returns a sequence consisting of the elements of `r1` and `r2` in sorted order, assuming
 that `r1` and `r2` are already sorted. An optional binary predicate can be used to specify the comparison operation.
 
-### Histogram
+### [Experimental] Histogram
+
 
 ```c++
-template<parlay::Range R, typename Integer_>
-auto histogram(const R& A, Integer_ m)
+template<parlay::Range R>
+auto histogram_by_key(R&& A)
 ```
 
-**histogram** takes an integer valued range and a maximum value and returns a histogram, i.e. an array recording the number of occurrences of each element in the input range, up to the given maximum.
+```c++
+template <typename sum_type = size_t, parlay::Range R, typename Hash, typename Equal>
+auto histogram_by_key(R&& A, Hash hash, Equal equal)
+```
 
+```c++
+template<typename Integer_, parlay::Range R>
+auto histogram_by_index(const R& A, Integer_ m)
+```
+
+These functions are currently experimental and their interfaces may change soon.
+
+**histogram_by_key** takes a range `A` and returns a sequence of key-value pairs, where the keys are the unique elements of `A`, and the values are the number of occurences of the corresponding key in `A`. Keys must be equality-comparable and hashable. The keys are not guaranteed to be in sorted order. Optionally, custom unary and binary operators can be supplied that specify how to hash and compare keys. By default, `std::hash` and `std::equal_to` are used. An optional template argument, `sum_type` allows the type of the counter values to be customized. 
+
+**histogram_by_index** takes an integer-valued range `A` and a maximum value `m` and returns a sequence of length `m`, such that the `i`'th value of the sequence contains the number of occurences of `i` in `A`.
 ### Sort
 
 ```c++
