@@ -7,7 +7,6 @@
 #include <utility>
 
 #include "../monoid.h"
-#include "../primitives.h"
 #include "../range.h"
 #include "../sequence.h"
 #include "../slice.h"
