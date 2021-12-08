@@ -28,7 +28,7 @@ parlay::sequence<long> prime_sieve(long n) {
       long prime = primes_sqrt[i];
       parlay::parallel_for(2, n/prime + 1, [&] (size_t j) {
         flags[prime * j] = false;
-      }, 1000);
+      });
     }, 1);
     return parlay::pack_index<long>(flags);    // indices of the primes
   }
@@ -61,6 +61,7 @@ Parlay's algorithms are designed to provide near-state-of-the-art performance an
 
 Parlay includes additional tools that make it easier to write parallel and concurrent code.
 
+* [Parallel scheduler](./other/scheduler.md) - A fast work-stealing scheduler
 * [Memory allocator](./other/allocator.md) - A scalable pool-based memory allocator
 
 

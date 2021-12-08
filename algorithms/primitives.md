@@ -57,12 +57,12 @@ auto delayed_tabulate(size_t n, UnaryOp&& f)
 ### Map
 
 ```c++
-template<parlay::Range R, typename UnaryOp>
+template<typename R, typename UnaryOp>
 auto map(R&& r, UnaryOp&& f)
 ```
 
 ```c++
-template<parlay::Range R, typename UnaryOp>
+template<typename R, typename UnaryOp>
 auto delayed_map(R&& r, UnaryOp&& f)
 ```
 
@@ -73,7 +73,7 @@ auto delayed_map(R&& r, UnaryOp&& f)
 ### Copy
 
 ```c++
-template<parlay::Range R_in, parlay::Range R_out>
+template<typename R_in, typename R_out>
 void copy(const R_in& in, R_out& out)
 ```
 
@@ -82,12 +82,12 @@ void copy(const R_in& in, R_out& out)
 ### Reduce
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 auto reduce(const R& r)
 ```
 
 ```c++
-template<parlay::Range R, typename Monoid>
+template<typename R, typename Monoid>
 auto reduce(const R& r, Monoid&& m)
 ```
 
@@ -96,42 +96,42 @@ auto reduce(const R& r, Monoid&& m)
 ### Scan
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 auto scan(const R& r)
 ```
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 auto scan_inclusive(const R& r)
 ```
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 auto scan_inplace(R&& r)
 ```
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 auto scan_inclusive_inplace(R&& r)
 ```
 
 ```c++
-template<parlay::Range R, typename Monoid>
+template<typename R, typename Monoid>
 auto scan(const R& r, Monoid&& m)
 ```
 
 ```c++
-template<parlay::Range R, typename Monoid>
+template<typename R, typename Monoid>
 auto scan_inclusive(const R& r, Monoid&& m)
 ```
 
 ```c++
-template<parlay::Range R, typename Monoid>
+template<typename R, typename Monoid>
 auto scan_inplace(R&& r, Monoid&& m)
 ```
 
 ```c++
-template<parlay::Range R, typename Monoid>
+template<typename R, typename Monoid>
 auto scan_inclusive_inplace(R& r, Monoid&& m)
 ```
 
@@ -142,22 +142,22 @@ By default, scan considers prefix sums excluding the final element. There is als
 ### Pack
 
 ```c++
-template<parlay::Range R, parlay::Range BoolSeq>
+template<typename R, typename BoolSeq>
 auto pack(const R& r, const BoolSeq& b)
 ```
 
 ```c++
-template<parlay::Range R_in, parlay::Range BoolSeq, parlay::Range R_out>
+template<typename R_in, typename BoolSeq, typename R_out>
 auto pack_into(const R_in& in, const BoolSeq& b, R_out& out)
 ```
 
 ```c++
-template<parlay::Range BoolSeq>
+template<typename BoolSeq>
 auto pack_index(const BoolSeq& b) 
 ```
 
 ```c++
-template<typename IndexType, parlay::Range BoolSeq>
+template<typename IndexType, typename BoolSeq>
 auto pack_index(const BoolSeq& b) 
 ```
 
@@ -168,12 +168,12 @@ Similarly, **pack_into** does the same thing but writes the answer into an exist
 ### Filter
 
 ```c++
-template<parlay::Range R, typename UnaryPred>
+template<typename R, typename UnaryPred>
 auto filter(const R& r, UnaryPred&& f) 
 ```
 
 ```c++
-template<parlay::Range R_in, parlay::Range R_out, typename UnaryPred>
+template<typename R_in, typename R_out, typename UnaryPred>
 auto filter_into(const R_in& in, R_out& out, UnaryPred&& f)
 ```
 
@@ -182,12 +182,12 @@ auto filter_into(const R_in& in, R_out& out, UnaryPred&& f)
 ### Merge
 
 ```c++
-template<parlay::Range R1, parlay::Range R2>
+template<typename R1, typename R2>
 auto merge(const R1& r1, const R2& r2)
 ```
 
 ```c++
-template<parlay::Range R1, parlay::Range R2, typename BinaryPred>
+template<typename R1, typename R2, typename BinaryPred>
 auto merge(const R1& r1, const R2& r2, BinaryPred pred)
 ```
 
@@ -198,17 +198,17 @@ that `r1` and `r2` are already sorted. An optional binary predicate can be used 
 
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 auto histogram_by_key(R&& A)
 ```
 
 ```c++
-template <typename sum_type = size_t, parlay::Range R, typename Hash, typename Equal>
+template <typename sum_type = size_t, typename R, typename Hash, typename Equal>
 auto histogram_by_key(R&& A, Hash hash, Equal equal)
 ```
 
 ```c++
-template<typename Integer_, parlay::Range R>
+template<typename Integer_, typename R>
 auto histogram_by_index(const R& A, Integer_ m)
 ```
 
@@ -220,42 +220,42 @@ These functions are currently experimental and their interfaces may change soon.
 ### Sort
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 auto sort(const R& in)
 ```
 
 ```c++
-template<parlay::Range R, typename Compare>
+template<typename R, typename Compare>
 auto sort(const R& in, Compare&& comp)
 ```
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 auto stable_sort(const R& in)
 ```
 
 ```c++
-template<parlay::Range R, typename Compare>
+template<typename R, typename Compare>
 auto stable_sort(const R& in, Compare&& comp)
 ```
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 void sort_inplace(R&& in)
 ```
 
 ```c++
-template<parlay::Range R, typename Compare>
+template<typename R, typename Compare>
 void sort_inplace(R&& in, Compare&& comp)
 ```
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 void stable_sort_inplace(R&& in)
 ```
 
 ```c++
-template<parlay::Range R, typename Compare>
+template<typename R, typename Compare>
 void stable_sort_inplace(R&& in, Compare&& comp)
 ```
 
@@ -265,32 +265,32 @@ void stable_sort_inplace(R&& in, Compare&& comp)
 ### Integer Sort
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 auto integer_sort(const R& in)
 ```
 
 ```c++
-template<parlay::Range R, typename Key>
+template<typename R, typename Key>
 auto integer_sort(const R& in, Key&& key)
 ```
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 void integer_sort_inplace(R&& in)
 ```
 
 ```c++
-template<parlay::Range R, typename Key>
+template<typename R, typename Key>
 void integer_sort_inplace(R&& in, Key&& key)
 ```
 
 ```c++
-template<parlay::Range R, typename Key>
+template<typename R, typename Key>
 auto stable_integer_sort(const R& in, Key&& key)
 ```
 
 ```c++
-template<parlay::Range R, typename Key>
+template<typename R, typename Key>
 void stable_integer_sort_inplace(R&& in, Key&& key)
 ```
 
@@ -299,7 +299,7 @@ void stable_integer_sort_inplace(R&& in, Key&& key)
 ### For each
 
 ```c++
-template <parlay::Range R, typename UnaryFunction>
+template <typename R, typename UnaryFunction>
 void for_each(R&& r , UnaryFunction f)
 ```
 
@@ -308,12 +308,12 @@ void for_each(R&& r , UnaryFunction f)
 ### Count
 
 ```c++
-template <parlay::Range R, class T>
+template <typename R, class T>
 size_t count(const R& r, T const &value)
 ```
 
 ```c++
-template <parlay::Range R, typename UnaryPredicate>
+template <typename R, typename UnaryPredicate>
 size_t count_if(const R& r, UnaryPredicate p)
 ```
 
@@ -322,17 +322,17 @@ size_t count_if(const R& r, UnaryPredicate p)
 ### All of, any of, none of
 
 ```c++
-template <parlay::Range R, typename UnaryPredicate>
+template <typename R, typename UnaryPredicate>
 bool all_of(const R& r, UnaryPredicate p)
 ```
 
 ```c++
-template <parlay::Range R, typename UnaryPredicate>
+template <typename R, typename UnaryPredicate>
 bool any_of(const R& r, UnaryPredicate p)
 ```
 
 ```c++
-template <parlay::Range R, typename UnaryPredicate>
+template <typename R, typename UnaryPredicate>
 bool none_of(const R& r, UnaryPredicate p)
 ```
 
@@ -341,22 +341,22 @@ bool none_of(const R& r, UnaryPredicate p)
 ### Find
 
 ```c++
-template <parlay::Range R, typename T>
+template <typename R, typename T>
 auto find(R&& r, T const &value)
 ```
 
 ```c++
-template <parlay::Range R, typename UnaryPredicate>
+template <typename R, typename UnaryPredicate>
 auto find_if(R&& r, UnaryPredicate p)
 ```
 
 ```c++
-template <parlay::Range R, typename UnaryPredicate>
+template <typename R, typename UnaryPredicate>
 auto find_if_not(R&& r, UnaryPredicate p)
 ```
 
 ```c++
-template <parlay::Range R1, parlay::Range R2, typename BinaryPredicate>
+template <typename R1, typename R2, typename BinaryPredicate>
 auto find_first_of(R1&& r1, const R2& r2, BinaryPredicate p)
 ```
 
@@ -367,12 +367,12 @@ auto find_first_of(R1&& r1, const R2& r2, BinaryPredicate p)
 ### Adjacent find
 
 ```c++
-template <parlay::Range R>
+template <typename R>
 auto adjacent_find(R&& r)
 ```
 
 ```c++
-template <parlay::Range R, typename BinaryPred>
+template <typename R, typename BinaryPred>
 auto adjacent_find(R&& r, BinaryPred p)
 ```
 
@@ -381,12 +381,12 @@ auto adjacent_find(R&& r, BinaryPred p)
 ### Mismatch
 
 ```c++
-template <parlay::Range R1, parlay::Range R2>
+template <typename R1, typename R2>
 size_t mismatch(R1&& r1, R2&& r2)
 ```
 
 ```c++
-template <parlay::Range R1, parlay::Range R2, typename BinaryPred>
+template <typename R1, typename R2, typename BinaryPred>
 auto mismatch(R1&& r1, R2&& r2, BinaryPred p)
 ```
 
@@ -395,12 +395,12 @@ auto mismatch(R1&& r1, R2&& r2, BinaryPred p)
 ### Search
 
 ```c++
-template <parlay::Range R1, parlay::Range R2>
+template <typename R1, typename R2>
 size_t search(R1&& r1, const R2& r2)
 ```
 
 ```c++
-template <parlay::Range R1, parlay::Range R2, typename BinaryPred>
+template <typename R1, typename R2, typename BinaryPred>
 auto search(R1&& r1, const R2& r2, BinaryPred pred)
 ```
 
@@ -409,12 +409,12 @@ auto search(R1&& r1, const R2& r2, BinaryPred pred)
 ### Find end
 
 ```c++
-template <parlay::Range R1, parlay::Range R2>
+template <typename R1, typename R2>
 auto find_end(R1&& r1, const R2& r2)
 ```
 
 ```c++
-template <parlay::Range R1, parlay::Range R2, typename BinaryPred>
+template <typename R1, typename R2, typename BinaryPred>
 auto find_end(R1&& r1, const R2& r2, BinaryPred p)
 ```
 
@@ -423,12 +423,12 @@ auto find_end(R1&& r1, const R2& r2, BinaryPred p)
 ### Equal
 
 ```c++
-template <parlay::Range R1, parlay::Range R2>
+template <typename R1, typename R2>
 bool equal(const R1& r1, const R2& r2)
 ```
 
 ```c++
-template <parlay::Range R1, parlay::Range R2, class BinaryPred>
+template <typename R1, typename R2, class BinaryPred>
 bool equal(const R1& r1, const R2& r2, BinaryPred p)
 ```
 
@@ -437,7 +437,7 @@ bool equal(const R1& r1, const R2& r2, BinaryPred p)
 ### Lexicographical compare
 
 ```c++
-template <parlay::Range R1, parlay::Range R2, class Compare>
+template <typename R1, typename R2, class Compare>
 bool lexicographical_compare(const R1& r1, const R2& r2, Compare less)
 ```
 
@@ -446,12 +446,12 @@ bool lexicographical_compare(const R1& r1, const R2& r2, Compare less)
 ### Unique
 
 ```c++
-template<parlay::Range R>
+template<typename R>
 auto unique(const R& r)
 ```
 
 ```c++
-template <parlay::Range R, typename BinaryPredicate>
+template <typename R, typename BinaryPredicate>
 auto unique(const R& r, BinaryPredicate eq)
 ```
 
@@ -460,32 +460,32 @@ auto unique(const R& r, BinaryPredicate eq)
 ### Min and max element
 
 ```c++
-template <parlay::Range R>
+template <typename R>
 auto min_element(R&& r)
 ```
 
 ```c++
-template <parlay::Range R, typename Compare>
+template <typename R, typename Compare>
 auto min_element(R&& r, Compare comp)
 ```
 
 ```c++
-template <parlay::Range R>
+template <typename R>
 auto max_element(R&& r)
 ```
 
 ```c++
-template <parlay::Range R, typename Compare>
+template <typename R, typename Compare>
 auto max_element(R&& r, Compare comp)
 ```
 
 ```c++
-template <parlay::Range R>
+template <typename R>
 auto minmax_element(R&& r)
 ```
 
 ```c++
-template <parlay::Range R, typename Compare>
+template <typename R, typename Compare>
 auto minmax_element(R&& r, Compare comp)
 ```
 
@@ -494,12 +494,12 @@ auto minmax_element(R&& r, Compare comp)
 ### Reverse
 
 ```c++
-template <parlay::Range R>
+template <typename R>
 auto reverse(const R& r)
 ```
 
 ```c++
-template <parlay::Range R>
+template <typename R>
 auto reverse_inplace(R&& r)
 ```
 
@@ -508,7 +508,7 @@ auto reverse_inplace(R&& r)
 ### Rotate
 
 ```c++
-template <parlay::Range R>
+template <typename R>
 auto rotate(const R& r, size_t t)
 ```
 
@@ -517,22 +517,22 @@ auto rotate(const R& r, size_t t)
 ### Is sorted
 
 ```c++
-template <parlay::Range R>
+template <typename R>
 bool is_sorted(const R& r)
 ```
 
 ```c++
-template <parlay::Range R, typename Compare>
+template <typename R, typename Compare>
 bool is_sorted(const R& r, Compare comp)
 ```
 
 ```c++
-template <parlay::Range R>
+template <typename R>
 auto is_sorted_until(const R& r)
 ```
 
 ```c++
-template <parlay::Range R, typename Compare>
+template <typename R, typename Compare>
 auto is_sorted_until(const R& r, Compare comp)
 ```
 
@@ -541,7 +541,7 @@ auto is_sorted_until(const R& r, Compare comp)
 ### Is partitioned
 
 ```c++
-template <parlay::Range R, typename UnaryPred>
+template <typename R, typename UnaryPred>
 bool is_partitioned(const R& r, UnaryPred f)
 ```
 
@@ -550,12 +550,12 @@ bool is_partitioned(const R& r, UnaryPred f)
 ### Remove
 
 ```c++
-template<parlay::Range R, typename T>
+template<typename R, typename T>
 auto remove(const R& r, const T& v)
 ```
 
 ```c++
-template <parlay::Range R, typename UnaryPred>
+template <typename R, typename UnaryPred>
 auto remove_if(const R& r, UnaryPred pred)
 ```
 
@@ -573,7 +573,7 @@ auto iota(Index n)
 ### Flatten
 
 ```c++
-template <parlay::Range R>
+template <typename R>
 auto flatten(const R& r)
 ```
 
@@ -582,12 +582,12 @@ auto flatten(const R& r)
 ### Tokens
 
 ```c++
-template <parlay::Range R, typename UnaryPred = decltype(parlay::is_whitespace)>
+template <typename R, typename UnaryPred = decltype(parlay::is_whitespace)>
 sequence<sequence<char>> tokens(const R& r, UnaryPred is_space = parlay::is_whitespace)
 ```
 
 ```c++
-template <parlay::Range R, typename UnaryOp,
+template <typename R, typename UnaryOp,
           typename UnaryPred = decltype(parlay::is_whitespace)>
 auto map_tokens(const R& r, UnaryOp f, UnaryPred is_space = parlay::is_whitespace)
 ```
@@ -605,12 +605,12 @@ In essence, `map_tokens` is just equivalent to `parlay::map(parlay::tokens(r), f
 ### Split
 
 ```c++
-template <parlay::Range R, parlay::Range BoolRange>
+template <typename R, typename BoolRange>
 auto split_at(const R& r, const BoolRange& flags)
 ```
 
 ```c++
-template <parlay::Range R, parlay::Range BoolRange, typename UnaryOp>
+template <typename R, typename BoolRange, typename UnaryOp>
 auto map_split_at(const R& r, const BoolRange& flags, UnaryOp f)
 ```
 
