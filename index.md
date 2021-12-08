@@ -36,3 +36,31 @@ parlay::sequence<long> prime_sieve(long n) {
 ```
 
 This code demonstrates several of the key features mentioned above. The parallel for loop `parlay::parallel_for(i,j,f)` iterates over the range `[i,j)` and invokes the function `f` at each index. The sequence container holds an array of bools that is suitable for parallel computation (it is initialized and destructed in parallel). The `pack_index` algorithm takes a range of boolean elements and returns a sequence consisting of the indices that contain true.
+
+## Documentation
+
+Documentation for Parlay is an ongoing effort.
+
+### Data types
+
+Parlay's core data types make it easy to work in parallel over collections of items. The *sequence* data type is analagous to `std::vector` and should be your default container when using Parlay.
+
+* [sequence](./datatypes/sequence.md) - A parallel contiguous sequence container
+* [delayed_sequence](./datatypes/delayed_sequence.md) - A lazy functional sequence that generates its elements on demand
+* [slice](./datatypes/slice.md) - A non-owning view of a random-access iterator pair
+* [hashtable](./datatypes/hashtable.md) - A deterministic phase-concurrent hashtable
+
+### Algorithms
+
+Parlay's algorithms are designed to provide near-state-of-the-art performance and scalability for working on large datasets. Parlay supports parallel versions of the majority of the C++ standard library, and much more.
+
+* [Core algorithms](./algorithms/primitives.md) - Parlay's core primitives library
+* [I/O, parsing, and formatting](./algorithms/io.md) - Algorithms for I/O and strings
+
+### Other tools
+
+Parlay includes additional tools that make it easier to write parallel and concurrent code.
+
+* [Memory allocator](./other/allocator.md) - A scalable pool-based memory allocator
+
+
