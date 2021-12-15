@@ -80,7 +80,6 @@ jobs:
         include:
           - { sys: mingw64 }
           - { sys: clang64 }
-          - { sys: msys }
           - { sys: ucrt64 }
           
     name: MSYS2 ${{ matrix.sys }}
