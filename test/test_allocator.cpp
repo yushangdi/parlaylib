@@ -3,7 +3,14 @@
 #include <vector>
 
 #include <parlay/alloc.h>
-#include <parlay/random.h>
+//#include <parlay/random.h>
+
+TEST(TestAllocator, TestTypeAllocator) {
+  using vector_allocator = parlay::type_allocator<std::vector<int>>;
+  std::vector<int>* mem = vector_allocator::alloc();
+  vector_allocator::free(mem);
+}
+
 /*
 TEST(TestAllocator, TestParlayAllocator) {
   std::vector<int, parlay::allocator<int>> a;
@@ -22,11 +29,12 @@ TEST(TestAllocator, TestParlayAllocator) {
     ASSERT_EQ(a[i], i);
   }
 }
-*/
+
 
 TEST(TestAllocator, TestTypeAllocator) {
   using vector_allocator = parlay::type_allocator<std::vector<int>>;
   std::vector<int>* mem = vector_allocator::alloc();
+
   new (mem) std::vector<int>(100000);
   auto& a = *mem;
   a.reserve(100000);
@@ -38,10 +46,10 @@ TEST(TestAllocator, TestTypeAllocator) {
     a.push_back(i);
   }
   a.~vector<int>();
+
   vector_allocator::free(mem);
 }
 
-/*
 // Checks that type_allocator allocates small blocks successfully.
 TEST(TestAllocator, TestTypeAllocatorForSmallSizes) {
   using char_allocator = parlay::type_allocator<char>;
