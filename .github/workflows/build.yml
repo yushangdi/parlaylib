@@ -55,6 +55,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: Vampire/setup-wsl@v1
+      with:
+        distribution: Ubuntu-20.04
     
     - name: Install
       shell: wsl-bash {0}
