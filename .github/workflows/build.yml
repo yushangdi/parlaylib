@@ -136,7 +136,7 @@ jobs:
     - name: Build
       run: |
         cd build
-        make
+        cmake --build .
 
     - name: Test
       run: |
