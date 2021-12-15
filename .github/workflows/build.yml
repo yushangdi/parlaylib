@@ -117,6 +117,13 @@ jobs:
     name: ${{ matrix.config.name }}
     runs-on: windows-latest
     steps:
+    -name: Test directories
+     shell: C:\tools\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
+     run: |
+       mkdir "$(cygpath "${{github.workspace}}")"/build
+       cd "$(cygpath "${{github.workspace}}")"/build
+       pwd
+       
     - uses: actions/checkout@v2
     - uses: egor-tensin/setup-cygwin@v3
       with:
@@ -125,18 +132,18 @@ jobs:
     - name: Configure
       shell: C:\tools\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
       run: |
-        mkdir build
-        cd build
+        mkdir "$(cygpath "${{github.workspace}}")"/build
+        cd "$(cygpath "${{github.workspace}}")"/build
         CC=${{matrix.config.cc}} CXX=${{matrix.config.cxx}} cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
 
     - name: Build
       shell: C:\tools\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
       run: |
-        cd build
+        cd "$(cygpath "${{github.workspace}}")"/build
         make
 
     - name: Test
       shell: C:\tools\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
       run: |
-        cd build
+        cd "$(cygpath "${{github.workspace}}")"/build
         ctest -C Debug --no-tests=error --output-on-failure
