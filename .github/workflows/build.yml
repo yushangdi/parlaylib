@@ -125,18 +125,18 @@ jobs:
     - name: Configure
       shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
       run: |
-        mkdir build
-        cd build
+        mkdir ${{ env.GITHUB_WORKSPACE }}/build
+        cd ${{ env.GITHUB_WORKSPACE }}/build
         CC=${{matrix.config.cc}} CXX=${{matrix.config.cxx}} cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
 
     - name: Build
       shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
       run: |
-        cd build
+        cd ${{ env.GITHUB_WORKSPACE }}/build
         make
 
     - name: Test
       shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
       run: |
-        cd build
+        cd ${{ env.GITHUB_WORKSPACE }}/build
         ctest -C Debug --no-tests=error --output-on-failure
