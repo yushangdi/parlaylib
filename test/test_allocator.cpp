@@ -23,6 +23,7 @@ TEST(TestAllocator, TestParlayAllocator) {
   }
 }
 
+/*
 TEST(TestAllocator, TestTypeAllocator) {
   using vector_allocator = parlay::type_allocator<std::vector<int>>;
   std::vector<int>* mem = vector_allocator::alloc();
@@ -83,3 +84,4 @@ TEST(TestAllocator, TestPMallocAndPFree) {
     parlay::p_free(p);
   }
 }
+*/
