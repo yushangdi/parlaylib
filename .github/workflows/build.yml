@@ -120,10 +120,10 @@ jobs:
     - uses: actions/checkout@v2
     
     - name: Test directories
-      shell: C:\tools\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
+      shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
       run: |
-        mkdir "$(cygpath "${{github.workspace}}")"/build
-        cd "$(cygpath "${{github.workspace}}")"/build
+        mkdir build
+        cd build
         pwd
     
     - uses: egor-tensin/setup-cygwin@v3
