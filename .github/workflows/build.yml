@@ -124,27 +124,26 @@ jobs:
       run: |
         mkdir build
         cd build
-        pwd
     
     - uses: egor-tensin/setup-cygwin@v3
       with:
         packages: git,make,gcc-core,gcc-g++,cmake,clang,libiconv-devel,cygwin32-libiconv-1.14-2
 
     - name: Configure
-      shell: C:\tools\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
+      shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
       run: |
-        mkdir "$(cygpath "${{github.workspace}}")"/build
-        cd "$(cygpath "${{github.workspace}}")"/build
+        mkdir build
+        cd build
         CC=${{matrix.config.cc}} CXX=${{matrix.config.cxx}} cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
 
     - name: Build
-      shell: C:\tools\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
+      shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
       run: |
-        cd "$(cygpath "${{github.workspace}}")"/build
+        cd build
         make
 
     - name: Test
-      shell: C:\tools\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
+      shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
       run: |
-        cd "$(cygpath "${{github.workspace}}")"/build
+        cd build
         ctest -C Debug --no-tests=error --output-on-failure
