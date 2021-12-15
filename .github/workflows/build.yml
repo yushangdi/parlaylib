@@ -4,9 +4,9 @@ env:
   PARLAY_NUM_THREADS: 16
 
 jobs:
-  
+
   msvc:
-    name: Microsoft Visual C++
+    name: Microsoft Visual C++ 19
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -16,39 +16,38 @@ jobs:
         md build
         cd build
         cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG=" /bigobj " -DPARLAY_TEST=On ..
-        
+
     - name: Build
       run: |
         cd build
         cmake --build .
-        
+
     - name: Test
       run: |
         cd build
         ctest -C Debug --no-tests=error --output-on-failure
 
   mingw:
-    name: MinGW
+    name: MinGW w64 11
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: egor-tensin/setup-mingw@v2
-    
+
     - name: Install MinGW
       run: |
         choco install mingw --version=11.2.0
-    
+
     - name: Configure
       run: |
         md build
         cd build
         cmake -G "MinGW Makefiles" -DCMAKE_CC_COMPILER="cc" -DCMAKE_CXX_COMPILER="c++" -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
-        
+
     - name: Build
       run: |
         cd build
         cmake --build .
-        
+
     - name: Test
       run: |
         cd build
@@ -74,7 +73,7 @@ jobs:
     - uses: Vampire/setup-wsl@v1
       with:
         distribution: Ubuntu-20.04
-    
+
     - name: Install
       shell: wsl-bash {0}
       run: |
@@ -82,22 +81,62 @@ jobs:
         sudo apt-get -y install make ${{matrix.config.cc}} ${{matrix.config.cxx}}
         wget --quiet https://github.com/Kitware/CMake/releases/download/v3.18.2/cmake-3.18.2-Linux-x86_64.tar.gz
         tar -xf cmake-3.18.2-Linux-x86_64.tar.gz
-    
+
     - name: Configure
       shell: wsl-bash {0}
       run: |
         mkdir build
         cd build
         CC=${{matrix.config.cc}} CXX=${{matrix.config.cxx}} ../cmake-3.18.2-Linux-x86_64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DWSL=True ..
-        
+
     - name: Build
       shell: wsl-bash {0}
       run: |
         cd build
         make
-        
+
     - name: Test
       shell: wsl-bash {0}
       run: |
         cd build
         ../cmake-3.18.2-Linux-x86_64/bin/ctest -C Debug --no-tests=error --output-on-failure
+
+  cygwin:
+    strategy:
+      matrix:
+        config:
+        - {
+            name: "Cygwin GCC",
+            cc: "gcc", cxx: "g++"
+          }
+        - {
+            name: "Cygwin Clang",
+            cc: "clang", cxx: "clang++"
+          }
+
+    name: ${{ matrix.config.name }}
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: egor-tensin/setup-cygwin@v3
+      with:
+        packages: git,make,gcc-core,gcc-g++,cmake,clang,libiconv-devel,cygwin32-libiconv-1.14-2
+
+    - name: Configure
+      shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+      run: |
+        mkdir build
+        cd build
+        CC=${{matrix.config.cc}} CXX=${{matrix.config.cxx}} cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
+
+    - name: Build
+      shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+      run: |
+        cd build
+        make
+
+    - name: Test
+      shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+      run: |
+        cd build
+        ctest -C Debug --no-tests=error --output-on-failure
