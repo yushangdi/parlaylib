@@ -5,8 +5,8 @@ env:
 
 jobs:
   
-  coverage:
-    name: MSVC
+  msvc:
+    name: Microsoft Visual C++
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -16,6 +16,28 @@ jobs:
         md build
         cd build
         cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG=" /bigobj " -DPARLAY_TEST=On ..
+        
+    - name: Build
+      run: |
+        cd build
+        cmake --build .
+        
+    - name: Test
+      run: |
+        cd build
+        ctest -C Debug --no-tests=error --output-on-failure
+
+  mingw:
+    name: MinGW
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: egor-tensin/setup-mingw@v2
+    - name: Configure
+      run: |
+        md build
+        cd build
+        cmake -G "MinGW Makefiles" -DCMAKE_CC_COMPILER="cc" -DCMAKE_CXX_COMPILER="c++" -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
         
     - name: Build
       run: |
