@@ -57,7 +57,7 @@ jobs:
     - uses: Vampire/setup-wsl@v1
     
     - name: Install
-      shell: wsl-bash
+      shell: wsl-bash {0}
       run: |
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
         sudo apt-get -qq update
@@ -66,20 +66,20 @@ jobs:
         tar -xf cmake-3.18.2-Linux-x86_64.tar.gz
     
     - name: Configure
-      shell: wsl-bash
+      shell: wsl-bash {0}
       run: |
         mkdir build
         cd build
         CC=gcc-9 CXX=g++-9 ../cmake-3.18.2-Linux-x86_64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DWSL=True ..
         
     - name: Build
-      shell: wsl-bash
+      shell: wsl-bash {0}
       run: |
         cd build
         make
         
     - name: Test
-      shell: wsl-bash
+      shell: wsl-bash {0}
       run: |
         cd build
         ../cmake-3.18.2-Linux-x86_64/bin/ctest -C Debug --no-tests=error --output-on-failure
