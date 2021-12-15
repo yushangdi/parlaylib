@@ -117,14 +117,15 @@ jobs:
     name: ${{ matrix.config.name }}
     runs-on: windows-latest
     steps:
-    -name: Test directories
-     shell: C:\tools\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
-     run: |
-       mkdir "$(cygpath "${{github.workspace}}")"/build
-       cd "$(cygpath "${{github.workspace}}")"/build
-       pwd
-       
     - uses: actions/checkout@v2
+    
+    - name: Test directories
+      shell: C:\tools\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
+      run: |
+        mkdir "$(cygpath "${{github.workspace}}")"/build
+        cd "$(cygpath "${{github.workspace}}")"/build
+        pwd
+    
     - uses: egor-tensin/setup-cygwin@v3
       with:
         packages: git,make,gcc-core,gcc-g++,cmake,clang,libiconv-devel,cygwin32-libiconv-1.14-2
