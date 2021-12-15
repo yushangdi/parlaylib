@@ -48,3 +48,33 @@ jobs:
       run: |
         cd build
         ctest -C Debug --no-tests=error --output-on-failure
+
+  wsl-gcc:
+    name: WSL GCC
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Install
+      run: |
+        wsl sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        wsl sudo apt-get -qq update
+        wsl sudo apt-get -y install gcc-9 g++-9 make
+        wsl wget --quiet https://github.com/Kitware/CMake/releases/download/v3.18.2/cmake-3.18.2-Linux-x86_64.tar.gz
+        wsl tar -xf cmake-3.18.2-Linux-x86_64.tar.gz
+    
+    - name: Configure
+      run: |
+        md build
+        cd build
+        wsl CC=gcc-9 CXX=g++-9 ../cmake-3.18.2-Linux-x86_64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DWSL=True ..
+        
+    - name: Build
+      run: |
+        cd build
+        wsl make
+        
+    - name: Test
+      run: |
+        cd build
+        wsl ../cmake-3.18.2-Linux-x86_64/bin/ctest -C Debug --no-tests=error --output-on-failure
