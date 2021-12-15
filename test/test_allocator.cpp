@@ -4,7 +4,7 @@
 
 #include <parlay/alloc.h>
 #include <parlay/random.h>
-
+/*
 TEST(TestAllocator, TestParlayAllocator) {
   std::vector<int, parlay::allocator<int>> a;
   a.reserve(100000);
@@ -22,7 +22,7 @@ TEST(TestAllocator, TestParlayAllocator) {
     ASSERT_EQ(a[i], i);
   }
 }
-
+*/
 
 TEST(TestAllocator, TestTypeAllocator) {
   using vector_allocator = parlay::type_allocator<std::vector<int>>;
