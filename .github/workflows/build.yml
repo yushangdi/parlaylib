@@ -54,27 +54,32 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
+    - uses: Vampire/setup-wsl@v1
     
     - name: Install
+      shell: wsl-bash
       run: |
-        wsl sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-        wsl sudo apt-get -qq update
-        wsl sudo apt-get -y install gcc-9 g++-9 make
-        wsl wget --quiet https://github.com/Kitware/CMake/releases/download/v3.18.2/cmake-3.18.2-Linux-x86_64.tar.gz
-        wsl tar -xf cmake-3.18.2-Linux-x86_64.tar.gz
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        sudo apt-get -qq update
+        sudo apt-get -y install gcc-9 g++-9 make
+        wget --quiet https://github.com/Kitware/CMake/releases/download/v3.18.2/cmake-3.18.2-Linux-x86_64.tar.gz
+        tar -xf cmake-3.18.2-Linux-x86_64.tar.gz
     
     - name: Configure
+      shell: wsl-bash
       run: |
-        md build
+        mkdir build
         cd build
-        wsl CC=gcc-9 CXX=g++-9 ../cmake-3.18.2-Linux-x86_64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DWSL=True ..
+        CC=gcc-9 CXX=g++-9 ../cmake-3.18.2-Linux-x86_64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DWSL=True ..
         
     - name: Build
+      shell: wsl-bash
       run: |
         cd build
-        wsl make
+        make
         
     - name: Test
+      shell: wsl-bash
       run: |
         cd build
-        wsl ../cmake-3.18.2-Linux-x86_64/bin/ctest -C Debug --no-tests=error --output-on-failure
+        ../cmake-3.18.2-Linux-x86_64/bin/ctest -C Debug --no-tests=error --output-on-failure
