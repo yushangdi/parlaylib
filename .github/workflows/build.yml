@@ -27,32 +27,6 @@ jobs:
         cd build
         ctest -C Debug --no-tests=error --output-on-failure
 
-  mingw:
-    name: MinGW w64 11
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Install MinGW
-      run: |
-        choco install mingw --version=10.2.0
-
-    - name: Configure
-      run: |
-        md build
-        cd build
-        cmake -G "MinGW Makefiles" -DCMAKE_CC_COMPILER="cc" -DCMAKE_CXX_COMPILER="c++" -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
-
-    - name: Build
-      run: |
-        cd build
-        cmake --build .
-
-    - name: Test
-      run: |
-        cd build
-        ctest -C Debug --no-tests=error --output-on-failure
-
   wsl:
     strategy:
       matrix:
@@ -106,6 +80,8 @@ jobs:
         include:
           - { sys: mingw64 }
           - { sys: clang64 }
+          - { sys: msys }
+          - { sys: ucrt64 }
           
     name: MSYS2 ${{ matrix.sys }}
     runs-on: windows-latest
