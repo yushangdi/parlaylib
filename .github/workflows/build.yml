@@ -68,6 +68,9 @@ jobs:
 
     name: ${{ matrix.config.name }}
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: wsl-bash {0}
     steps:
     - uses: actions/checkout@v2
     - uses: Vampire/setup-wsl@v1
@@ -75,7 +78,6 @@ jobs:
         distribution: Ubuntu-20.04
 
     - name: Install
-      shell: wsl-bash {0}
       run: |
         sudo apt-get -qq update
         sudo apt-get -y install make ${{matrix.config.cc}} ${{matrix.config.cxx}}
@@ -83,23 +85,63 @@ jobs:
         tar -xf cmake-3.18.2-Linux-x86_64.tar.gz
 
     - name: Configure
-      shell: wsl-bash {0}
       run: |
         mkdir build
         cd build
         CC=${{matrix.config.cc}} CXX=${{matrix.config.cxx}} ../cmake-3.18.2-Linux-x86_64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DWSL=True ..
 
     - name: Build
-      shell: wsl-bash {0}
       run: |
         cd build
         make
 
     - name: Test
-      shell: wsl-bash {0}
       run: |
         cd build
         ../cmake-3.18.2-Linux-x86_64/bin/ctest -C Debug --no-tests=error --output-on-failure
+
+  msys:
+    strategy:
+      matrix:
+        include:
+          - { sys: mingw64 }
+          - { sys: clang64 }
+          
+    name: MSYS2 ${{ matrix.sys }}
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: '${{ matrix.icon }} Setup MSYS2'
+      with:
+        msystem: ${{matrix.sys}}
+        update: true
+        install: >-
+          git
+          make
+        pacboy: >-
+          toolchain:p
+          cmake:p
+          
+    - name: Configure
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
+
+    - name: Build
+      run: |
+        cd build
+        make
+
+    - name: Test
+      run: |
+        cd build
+        ctest -C Debug --no-tests=error --output-on-failure
 
   cygwin:
     strategy:
@@ -116,28 +158,27 @@ jobs:
 
     name: ${{ matrix.config.name }}
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
     steps:
     - uses: actions/checkout@v2
-    
     - uses: egor-tensin/setup-cygwin@v3
       with:
         packages: git,make,gcc-core,gcc-g++,cmake,clang,libiconv-devel,cygwin32-libiconv-1.14-2
 
     - name: Configure
-      shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
       run: |
         mkdir build
         cd build
         CC=${{matrix.config.cc}} CXX=${{matrix.config.cxx}} cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On ..
 
     - name: Build
-      shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
       run: |
         cd build
         make
 
     - name: Test
-      shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
       run: |
         cd build
         ctest -C Debug --no-tests=error --output-on-failure
