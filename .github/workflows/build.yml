@@ -49,8 +49,20 @@ jobs:
         cd build
         ctest -C Debug --no-tests=error --output-on-failure
 
-  wsl-gcc:
-    name: WSL GCC
+  wsl:
+    strategy:
+      matrix:
+        config:
+        - {
+            name: "WSL GCC-10",
+            cc: "gcc-10", cxx: "g++-10"
+          }
+        - {
+            name: "WSL Clang-11",
+            cc: "clang-11", cxx: "clang++-11"
+          }
+
+    name: ${{ matrix.config.name }}
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -63,7 +75,7 @@ jobs:
       run: |
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
         sudo apt-get -qq update
-        sudo apt-get -y install gcc-9 g++-9 make
+        sudo apt-get -y install make ${{matrix.config.cc}} ${{matrix.config.cxx}}
         wget --quiet https://github.com/Kitware/CMake/releases/download/v3.18.2/cmake-3.18.2-Linux-x86_64.tar.gz
         tar -xf cmake-3.18.2-Linux-x86_64.tar.gz
     
@@ -72,7 +84,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        CC=gcc-9 CXX=g++-9 ../cmake-3.18.2-Linux-x86_64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DWSL=True ..
+        CC=${{matrix.config.cc}} CXX=${{matrix.config.cxx}} ../cmake-3.18.2-Linux-x86_64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DPARLAY_TEST=On -DWSL=True ..
         
     - name: Build
       shell: wsl-bash {0}
