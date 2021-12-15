@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 
-#include <numeric>
 #include <vector>
 
 #include <parlay/delayed_sequence.h>
