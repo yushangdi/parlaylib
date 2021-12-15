@@ -35,7 +35,7 @@ jobs:
 
     - name: Install MinGW
       run: |
-        choco install mingw --version=11.2.0
+        choco install mingw --version=11.2.0.07112021
 
     - name: Configure
       run: |
