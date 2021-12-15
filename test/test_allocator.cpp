@@ -23,7 +23,7 @@ TEST(TestAllocator, TestParlayAllocator) {
   }
 }
 
-/*
+
 TEST(TestAllocator, TestTypeAllocator) {
   using vector_allocator = parlay::type_allocator<std::vector<int>>;
   std::vector<int>* mem = vector_allocator::alloc();
@@ -41,6 +41,7 @@ TEST(TestAllocator, TestTypeAllocator) {
   vector_allocator::free(mem);
 }
 
+/*
 // Checks that type_allocator allocates small blocks successfully.
 TEST(TestAllocator, TestTypeAllocatorForSmallSizes) {
   using char_allocator = parlay::type_allocator<char>;
