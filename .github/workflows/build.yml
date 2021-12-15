@@ -113,9 +113,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-    steps:
     - uses: actions/checkout@v2
-    
     - name: '${{ matrix.icon }} Setup MSYS2'
       with:
         msystem: ${{matrix.sys}}
