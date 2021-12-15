@@ -125,6 +125,7 @@ jobs:
         pacboy: >-
           toolchain:p
           cmake:p
+          ninja:p
           
     - name: Configure
       run: |
