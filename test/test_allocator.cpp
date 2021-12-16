@@ -1,15 +1,11 @@
 #include "gtest/gtest.h"
 
-#include <vector>
-
 #include <parlay/alloc.h>
-//#include <parlay/random.h>
 
 TEST(TestAllocator, TestTypeAllocator) {
-  using vector_allocator = parlay::type_allocator<std::vector<int>>;
-  volatile vector_allocator alloc{};
-  //std::vector<int>* mem = vector_allocator::alloc();
-  //vector_allocator::free(mem);
+  using my_allocator = parlay::type_allocator<long long int>;
+  long long int* x = my_allocator::alloc();
+  my_allocator::free(x);
 }
 
 /*
