@@ -40,6 +40,7 @@ jobs:
       run: |
         cd build
         cmake --build .
+        time ./test/test_allocator --gtest_list_tests
 
     - name: Test
       run: |
