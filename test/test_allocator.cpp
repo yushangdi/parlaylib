@@ -7,8 +7,9 @@
 
 TEST(TestAllocator, TestTypeAllocator) {
   using vector_allocator = parlay::type_allocator<std::vector<int>>;
-  std::vector<int>* mem = vector_allocator::alloc();
-  vector_allocator::free(mem);
+  volatile vector_allocator alloc{};
+  //std::vector<int>* mem = vector_allocator::alloc();
+  //vector_allocator::free(mem);
 }
 
 /*
