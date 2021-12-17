@@ -5,7 +5,7 @@ env:
 
 jobs:
   build:
-    name: ${{ matrix.config.os }} ${{ matrix.config.cxx }} (${{ matrix.build_type }})
+    name: ${{ matrix.config.os }} ${{ matrix.config.cxx }} ${{ matrix.config.note }} (${{ matrix.build_type }})
     runs-on: ${{ matrix.config.os }}
     defaults:
       run:
@@ -73,7 +73,7 @@ jobs:
           ctest --no-tests=error --output-on-failure
 
   msvc:
-    name: [windows-latest] MSVC 19 (${{matrix.build_type}})
+    name: windows-latest MSVC 19 (${{matrix.build_type}})
     runs-on: windows-latest
     strategy:
       matrix:
@@ -104,7 +104,7 @@ jobs:
           - { cc: "gcc-10", cxx: "g++-10" }
           - { cc: "clang-11", cxx: "clang++-11" }
 
-    name: [windows-latest] WSL ${{ matrix.config.cxx }} (Debug)
+    name: windows-latest WSL ${{ matrix.config.cxx }} (Debug)
     runs-on: windows-latest
     defaults:
       run:
@@ -146,7 +146,7 @@ jobs:
           - { sys: clang64 }
           - { sys: ucrt64 }
 
-    name: [windows-latest] MSYS2 ${{ matrix.sys }} (Debug)
+    name: windows-latest MSYS2 ${{ matrix.sys }} (Debug)
     runs-on: windows-latest
     defaults:
       run:
@@ -189,7 +189,7 @@ jobs:
           - { cc: "gcc", cxx: "g++" }
           - { cc: "clang", cxx: "clang++" }
 
-    name: [windows-latest] Cygwin ${{ matrix.config.cxx }} (Debug)
+    name: windows-latest Cygwin ${{ matrix.config.cxx }} (Debug)
     runs-on: windows-latest
     defaults:
       run:
@@ -246,7 +246,7 @@ jobs:
           ctest --no-tests=error --output-on-failure
 
   opencilk:
-    name: [ubuntu-latest] Open Cilk Clang 12 (Debug)
+    name: ubuntu-latest Open Cilk Clang 12 (Debug)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -282,7 +282,7 @@ jobs:
           ctest --no-tests=error --output-on-failure
 
   tbb:
-    name: [ubuntu-latest] TBB Clang 11 (Debug)
+    name: ubuntu-latest TBB Clang 11 (Debug)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -379,7 +379,7 @@ jobs:
           make iwyu-all
 
   asan:
-    name: [ubuntu-latest] ASAN Clang 10 (Debug)
+    name: ubuntu-latest ASAN Clang 10 (Debug)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -408,7 +408,7 @@ jobs:
           ctest --no-tests=error --output-on-failure -R asan
 
   ubsan:
-    name: [ubuntu-latest] UBSAN Clang 10 (Debug)
+    name: ubuntu-latest UBSAN Clang 10 (Debug)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
