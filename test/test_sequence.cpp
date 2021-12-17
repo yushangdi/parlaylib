@@ -7,6 +7,7 @@
 
 #include <parlay/alloc.h>
 #include <parlay/sequence.h>
+#include <parlay/type_traits.h>
 #include <parlay/utilities.h>
 
 // Sequences should be trivially relocatable provided that they
