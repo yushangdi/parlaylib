@@ -221,8 +221,6 @@ inline std::vector<size_t> default_sizes() {
 }
 
 
-
-#ifndef PARLAY_USE_STD_ALLOC
 namespace internal {
 extern inline pool_allocator& get_default_allocator() {
   static pool_allocator default_allocator(default_sizes());
@@ -293,7 +291,7 @@ extern inline void p_free(void* ptr) {
   internal::get_default_allocator().deallocate((void*) (((char*) ptr) - hsize),
                                                n + hsize);
 }
-#endif
+
 
 // ****************************************
 // Static allocator for single items of a given type, e.g.
