@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 
+#include <parlay/alloc.h>
 #include <parlay/sequence.h>
 #include <parlay/utilities.h>
 
