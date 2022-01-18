@@ -24,7 +24,7 @@ jobs:
           }
           - {
             os: ubuntu-18.04,
-            cc: "clang-6", cxx: "clang++-6"
+            cc: "clang-5.0", cxx: "clang++-5.0"
           }
           - {
             os: ubuntu-latest,
@@ -49,9 +49,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+     - name: Set up toolchain repositories
+       if: matrix.config.os == 'ubuntu-18.04'
+       run: |
+         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+         sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-5.0 main"
+
       - name: Install Compiler
         if: startsWith(matrix.config.os, 'ubuntu')
-        run: sudo apt-get -qq install ${{matrix.config.cc}} ${{matrix.config.cxx}}
+        run: |
+          sudo apt-get -qq install ${{matrix.config.cc}} ${{matrix.config.cxx}}
 
       - name: Install libc++
         if: matrix.config.libcxx
