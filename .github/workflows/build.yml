@@ -24,7 +24,7 @@ jobs:
           }
           - {
             os: ubuntu-18.04,
-            cc: "clang-5", cxx: "clang++-5"
+            cc: "clang-6", cxx: "clang++-6"
           }
           - {
             os: ubuntu-latest,
@@ -39,7 +39,7 @@ jobs:
           }
           - {
             os: macos-latest,
-            cc: "gcc-9", cxx: "g++-9"
+            cc: "gcc-11", cxx: "g++-11"
           }
           - {
             os: macos-latest,
@@ -101,8 +101,8 @@ jobs:
     strategy:
       matrix:
         config:
-          - { cc: "gcc-10", cxx: "g++-10" }
-          - { cc: "clang-11", cxx: "clang++-11" }
+          - { cc: "gcc", cxx: "g++" }
+          - { cc: "clang", cxx: "clang++" }
 
     name: windows-latest WSL ${{ matrix.config.cxx }} (Debug)
     runs-on: windows-latest
