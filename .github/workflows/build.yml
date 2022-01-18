@@ -24,9 +24,9 @@ jobs:
           }
           - {
             os: ubuntu-18.04,
-            cc: "clang-5.0", cxx: "clang++-5.0",
+            cc: "clang-6.0", cxx: "clang++-6.0",
             libcxx: true,
-            libcxx_version: "5.0",
+            libcxx_version: "6.0",
             note: " with libc++"
           }
           - {
