@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set up toolchain repositories
-        if: ${{ matrix.config.os == "ubuntu-18.04" }}
+        if: ${{ matrix.config.os == 'ubuntu-18.04' }}
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-5.0 main"
