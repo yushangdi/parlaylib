@@ -108,8 +108,8 @@ jobs:
     strategy:
       matrix:
         config:
-          - { cc: "gcc", cxx: "g++" }
-          - { cc: "clang", cxx: "clang++" }
+          - { cc: "gcc-11", cxx: "g++-11" }
+          - { cc: "clang-12", cxx: "clang++-12" }
 
     name: windows-latest WSL ${{ matrix.config.cxx }} (Debug)
     runs-on: windows-latest
