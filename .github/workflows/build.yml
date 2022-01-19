@@ -38,11 +38,11 @@ jobs:
 #            note: " with libc++"
 #          }
           - {
-            os: macos-11,
+            os: macos-latest,
             cc: "gcc-11", cxx: "g++-11"
           }
           - {
-            os: macos-11,
+            os: macos-latest,
             cc: "clang", cxx: "clang++"
           }
 
@@ -81,7 +81,7 @@ jobs:
 
   msvc:
     name: windows-latest MSVC 19 (${{matrix.build_type}})
-    runs-on: windows-2022
+    runs-on: windows-latest
     strategy:
       matrix:
         build_type: ["Debug", "RelWithDebInfo", "Release"]
@@ -112,7 +112,7 @@ jobs:
           - { cc: "clang-12", cxx: "clang++-12" }
 
     name: windows-latest WSL ${{ matrix.config.cxx }} (Debug)
-    runs-on: windows-2022
+    runs-on: windows-latest
     defaults:
       run:
         shell: wsl-bash {0}
@@ -198,7 +198,7 @@ jobs:
           - { cc: "clang", cxx: "clang++" }
 
     name: windows-latest Cygwin ${{ matrix.config.cxx }} (Debug)
-    runs-on: windows-2022
+    runs-on: windows-latest
     defaults:
       run:
         shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
